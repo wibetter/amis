@@ -69,9 +69,7 @@ export const FormulaExec: {
     let result = undefined;
     try {
       // 执行 ${} 格式类表达式，且支持 filter 过滤器。（备注: isPureVariable 可用于判断是否有 过滤器。）
-      result = isPureVariable(expression)
-        ? resolveVariableAndFilter(expression, data)
-        : resolveVariable(expression, data);
+      result = resolveVariableAndFilter(expression, data, '| raw');
     } catch (e) {
       console.warn(
         '[formula]表达式执行异常，当前表达式: ',
@@ -90,7 +88,7 @@ export const FormulaExec: {
     try {
       result = evaluate(expression, curData, {
         evalMode: true, // evalMode 为 true 时，不用 ${} 包裹也可以执行，
-        allowFilter: true // 支持 filter 过滤器
+        allowFilter: false // 支持 filter 过滤器
       });
     } catch (e) {
       console.warn(
