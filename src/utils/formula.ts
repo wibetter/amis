@@ -69,13 +69,13 @@ export const FormulaExec: {
     let result = undefined;
     try {
       // 执行 ${} 格式类表达式，且支持 filter 过滤器。（备注: isPureVariable 可用于判断是否有 过滤器。）
-      result = resolveVariableAndFilter(expression, data, '| raw');
+      result = resolveVariableAndFilter(expression, curData, '| raw');
     } catch (e) {
       console.warn(
         '[formula]表达式执行异常，当前表达式: ',
         expression,
         '，当前上下文数据: ',
-        data
+        curData
       );
       return expression;
     }
@@ -193,7 +193,7 @@ export function formulaExec(
     // 非字符串类型，直接返回，比如：boolean、number类型、Object、Array类型
     return value;
   } else if (curExecMode && FormulaExec[curExecMode]) {
-    return FormulaExec[curExecMode];
+    return FormulaExec[curExecMode](value, data);
   }
 
   const curValue = value.trim(); // 剔除前后空格
