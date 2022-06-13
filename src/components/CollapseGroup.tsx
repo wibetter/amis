@@ -5,6 +5,8 @@
  */
 
 import React from 'react';
+import isEqual from 'lodash/isEqual';
+import {autobind} from '../utils/helper';
 import {CollapseProps} from '../renderers/Collapse';
 import {SchemaNode} from '../types';
 import {ClassNamesFn, themeable} from '../theme';
@@ -38,18 +40,39 @@ class CollapseGroup extends React.Component<
     super(props);
 
     // 传入的activeKey会被自动转换为defaultActiveKey
-    let activeKey = props.defaultActiveKey;
-    if (!Array.isArray(activeKey)) {
-      activeKey = activeKey ? [activeKey] : [];
+    this.updateActiveKey(props.defaultActiveKey, true);
+  }
+
+  UNSAFE_componentWillReceiveProps(nextProps: CollapseGroupProps) {
+    const props = this.props;
+
+    if (!isEqual(props.defaultActiveKey, nextProps.defaultActiveKey)) {
+      this.updateActiveKey(nextProps.defaultActiveKey);
+    }
+  }
+
+  @autobind
+  updateActiveKey(propsActiveKey: any, isInit?: boolean) {
+    const props = this.props;
+    let curActiveKey = propsActiveKey;
+
+    if (!Array.isArray(curActiveKey)) {
+      curActiveKey = curActiveKey ? [curActiveKey] : [];
     }
     if (props.accordion) {
       // 手风琴模式下只展开第一个元素
-      activeKey = activeKey.length ? [activeKey[0]] : [];
+      curActiveKey = curActiveKey.length ? [curActiveKey[0]] : [];
     }
 
-    this.state = {
-      activeKey: activeKey.map((key: number | string) => String(key))
-    };
+    if (isInit) {
+      this.state = {
+        activeKey: curActiveKey.map((key: number | string) => String(key))
+      };
+    } else {
+      this.setState({
+        activeKey: curActiveKey.map((key: number | string) => String(key))
+      });
+    }
   }
 
   collapseChange(item: CollapseProps, collapsed: boolean) {
