@@ -149,7 +149,7 @@ export const runActions = async (
     let actionInstrance = getActionByType(actionConfig.actionType);
 
     // 如果存在指定组件ID，说明是组件专有动作
-    if (!actionInstrance && actionConfig.componentId) {
+    if (actionConfig.componentId) {
       actionInstrance = getActionByType('component');
     } else if (
       actionConfig.actionType === 'url' ||
