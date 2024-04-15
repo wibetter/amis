@@ -128,6 +128,11 @@ export interface DateControlSchema extends InputDateBaseControlSchema {
    * 限制最大日期
    */
   maxDate?: string;
+
+  /**
+   * 弹窗容器选择器
+   */
+  popOverContainerSelector?: string;
 }
 
 /**
@@ -694,6 +699,7 @@ export default class DateControl extends React.PureComponent<
               ? env?.getModalContainer
               : rest.popOverContainer || env.getModalContainer
           }
+          popOverContainerSelector={rest.popOverContainerSelector}
           {...this.state}
           valueFormat={valueFormat || format}
           minDateRaw={this.props.minDate}
