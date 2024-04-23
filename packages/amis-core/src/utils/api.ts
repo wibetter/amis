@@ -1,4 +1,5 @@
 import omit from 'lodash/omit';
+import isEqual from 'lodash/isEqual';
 import {Api, ApiObject, EventTrack, fetcherResult, Payload} from '../types';
 import {FetcherConfig} from '../factory';
 import {tokenize, dataMapping, escapeHtml} from './tpl-builtin';
@@ -17,6 +18,7 @@ import {
   JSONTraverse,
   isEmpty
 } from './helper';
+import {formulaExecByDataObject} from './formula';
 import isPlainObject from 'lodash/isPlainObject';
 import {debug, warning} from './debug';
 import {evaluate} from 'amis-formula';
@@ -738,10 +740,13 @@ export function isApiOutdated(
     );
   }
 
+  /*
   const trackExpression = nextApi.trackExpression ?? nextApi.url;
   if (typeof trackExpression !== 'string' || !~trackExpression.indexOf('$')) {
+    // trackExpression 和 api.url 没有变量则直接返回
     return false;
   }
+  */
 
   let isModified = false;
 
@@ -756,7 +761,10 @@ export function isApiOutdated(
     nextApi = buildApi(nextApi as Api, nextData as object, {
       ignoreData: true
     });
-    isModified = prevApi.url !== nextApi.url;
+    // isModified = prevApi.url !== nextApi.url;
+    isModified =
+      prevApi.url !== nextApi.url ||
+      isApiDataOutdated(prevApi.data, nextApi.data, prevData, nextData);
   }
 
   return !!(
@@ -878,6 +886,26 @@ export function normalizeApiResponseData(data: any) {
   }
 
   return data;
+}
+
+/**
+ * 用于换算data中的所有表达式数值
+ */
+export function isApiDataOutdated(
+  prevApiData: any,
+  nextApiData: any,
+  prevData: any,
+  nextData: any
+) {
+  if (
+    (prevApiData === undefined && nextApiData !== undefined) ||
+    (prevApiData !== undefined && nextApiData === undefined)
+  ) {
+    return true;
+  }
+  const curPrevApiData = formulaExecByDataObject(prevApiData, prevData);
+  const curNextApiData = formulaExecByDataObject(nextApiData, nextData);
+  return !isEqual(curPrevApiData, curNextApiData);
 }
 
 // window.apiCaches = apiCaches;

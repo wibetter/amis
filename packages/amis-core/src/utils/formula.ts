@@ -250,3 +250,26 @@ export function replaceExpression(expression: any): any {
   }
   return expression;
 }
+
+// data对象中的表达式换算成对应的数值
+export function formulaExecByDataObject(
+  dataObject: any,
+  contextData: any
+): any {
+  const curDataObj: {
+    [propName: string]: any;
+  } = {};
+  if (!dataObject) return curDataObj;
+  Object.keys(dataObject).forEach((dataItem: any) => {
+    if (isExpression(dataObject[dataItem])) {
+      curDataObj[dataItem] = FormulaExec['formula'](
+        dataObject[dataItem],
+        contextData
+      );
+    } else {
+      curDataObj[dataItem] = dataObject[dataItem];
+    }
+  });
+
+  return curDataObj;
+}

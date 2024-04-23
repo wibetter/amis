@@ -147,7 +147,7 @@ test('EventAction:inputRange', async () => {
   await wait(300);
   await waitFor(() => {
     expect(container.querySelector('[value="触发了blur"]')).toBeInTheDocument();
-    expect(container.querySelector(`[value="值为0"]`)).toBeInTheDocument();
+    expect(container.querySelector('[value="值为0"]')).toBeInTheDocument();
   });
 
   expect(container).toMatchSnapshot();
