@@ -275,6 +275,9 @@ export interface DateProps extends LocaleProps, ThemeProps {
   valueFormat?: string;
   closeOnSelect: boolean;
   disabled?: boolean;
+  /* * 是否禁止输入
+   */
+  inputForbid?: boolean;
   minDate?: moment.Moment;
   maxDate?: moment.Moment;
   minDateRaw?: string;
@@ -525,6 +528,10 @@ export class DatePicker extends React.Component<DateProps, DatePickerState> {
   }
 
   handleBlur(e: React.SyntheticEvent<HTMLDivElement>) {
+    const targetElement = (e.nativeEvent as FocusEvent).relatedTarget;
+    if (targetElement === this.dom || targetElement === this.inputRef.current) {
+      return;
+    }
     this.setState({
       isFocused: false
     });
@@ -957,6 +964,7 @@ export class DatePicker extends React.Component<DateProps, DatePickerState> {
       onClick,
       onMouseEnter,
       onMouseLeave,
+      inputForbid,
       closeOnSelect
     } = this.props;
 
@@ -1098,7 +1106,7 @@ export class DatePicker extends React.Component<DateProps, DatePickerState> {
           autoComplete="off"
           value={this.state.inputValue || ''}
           disabled={disabled}
-          readOnly={mobileUI}
+          readOnly={mobileUI || inputForbid}
           {...testIdBuilder?.getChild('input').getTestId()}
         />
 

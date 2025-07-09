@@ -4,6 +4,7 @@ exports[`Renderer:PopOver with offset: default 1`] = `
 <div>
   <div
     class="cxd-Form-item cxd-Form-item--normal"
+    data-amis-name="static"
     data-role="form-item"
   >
     <label
@@ -11,7 +12,7 @@ exports[`Renderer:PopOver with offset: default 1`] = `
     >
       <span>
         <span
-          class="cxd-TplField"
+          class="cxd-TplField fr-view"
         >
           <span>
             静态展示
@@ -48,6 +49,7 @@ exports[`Renderer:PopOver with offset: show popover no offset 1`] = `
 <div>
   <div
     class="cxd-Form-item cxd-Form-item--normal"
+    data-amis-name="static"
     data-role="form-item"
   >
     <label
@@ -55,7 +57,7 @@ exports[`Renderer:PopOver with offset: show popover no offset 1`] = `
     >
       <span>
         <span
-          class="cxd-TplField"
+          class="cxd-TplField fr-view"
         >
           <span>
             静态展示
@@ -83,19 +85,20 @@ exports[`Renderer:PopOver with offset: show popover no offset 1`] = `
           />
         </span>
         <div
-          class="cxd-PopOver cxd-PopOverAble-popover cxd-PopOver--right"
+          class="cxd-PopOver cxd-PopOverAble-popover"
           role="popover"
-          style="display: block; left: 0px; top: 0px;"
+          style="display: block; left: 0px; top: 0px; visibility: hidden;"
           theme="cxd"
         >
           <div
             class="cxd-Panel cxd-Panel--default"
+            data-role="container"
           >
             <div
               class="cxd-Panel-body"
             >
               <span
-                class="cxd-TplField"
+                class="cxd-TplField fr-view"
               >
                 <span>
                   我是提示内容
@@ -114,6 +117,7 @@ exports[`Renderer:PopOver with offset: show popover with offset 1`] = `
 <div>
   <div
     class="cxd-Form-item cxd-Form-item--normal"
+    data-amis-name="static"
     data-role="form-item"
   >
     <label
@@ -121,7 +125,7 @@ exports[`Renderer:PopOver with offset: show popover with offset 1`] = `
     >
       <span>
         <span
-          class="cxd-TplField"
+          class="cxd-TplField fr-view"
         >
           <span>
             静态展示
@@ -149,19 +153,20 @@ exports[`Renderer:PopOver with offset: show popover with offset 1`] = `
           />
         </span>
         <div
-          class="cxd-PopOver cxd-PopOverAble-popover cxd-PopOver--right"
+          class="cxd-PopOver cxd-PopOverAble-popover"
           role="popover"
-          style="display: block; left: 101px; top: 102px;"
+          style="display: block; left: 101px; top: 102px; visibility: hidden;"
           theme="cxd"
         >
           <div
             class="cxd-Panel cxd-Panel--default"
+            data-role="container"
           >
             <div
               class="cxd-Panel-body"
             >
               <span
-                class="cxd-TplField"
+                class="cxd-TplField fr-view"
               >
                 <span>
                   我是提示内容

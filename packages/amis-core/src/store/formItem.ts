@@ -94,6 +94,7 @@ export const FormItemStore = StoreNode.named('FormItemStore')
     itemsRef: types.optional(types.array(types.string), []),
     inited: false,
     validated: false,
+    validatedAt: 0,
     validating: false,
     multiple: false,
     delimiter: ',',
@@ -312,11 +313,14 @@ export const FormItemStore = StoreNode.named('FormItemStore')
       },
       splitExtraValue(value: any) {
         const delimiter = self.delimiter || ',';
-        const values = Array.isArray(value)
-          ? value
-          : typeof value === 'string'
-          ? value.split(delimiter || ',').map((v: string) => v.trim())
-          : [];
+        const values =
+          value === ''
+            ? ['', '']
+            : Array.isArray(value)
+            ? value
+            : typeof value === 'string'
+            ? value.split(delimiter || ',').map((v: string) => v.trim())
+            : [];
         return values;
       },
 
@@ -569,6 +573,7 @@ export const FormItemStore = StoreNode.named('FormItemStore')
       }
 
       self.validating = false;
+      self.validatedAt = Date.now();
       return self.valid;
     });
 
@@ -620,7 +625,7 @@ export const FormItemStore = StoreNode.named('FormItemStore')
       }
 
       for (let option of options) {
-        if (Array.isArray(option.children)) {
+        if (Array.isArray(option.children) && option.children.length) {
           const childFirst = getFirstAvaibleOption(option.children);
           if (childFirst !== undefined) {
             return childFirst;
@@ -874,7 +879,12 @@ export const FormItemStore = StoreNode.named('FormItemStore')
     function loadOptionsFromDataScope(
       source: string,
       ctx: Record<string, any>,
-      onChange?: (value: any) => void
+      onChange?: (
+        value: any,
+        submitOnChange?: boolean,
+        changeImmediately?: boolean
+      ) => void,
+      clearValue?: boolean
     ) {
       let options: any[] = resolveVariableAndFilter(source, ctx, '| raw');
 
@@ -899,6 +909,13 @@ export const FormItemStore = StoreNode.named('FormItemStore')
       }
 
       setOptions(options, onChange, ctx);
+
+      // source从数据域获取，同时发生变化时，需要清空当前表单项
+      if (clearValue && !self.selectFirst) {
+        self.selectedOptions.some((item: any) => item.__unmatched) &&
+          onChange &&
+          onChange('', false, true);
+      }
 
       return options;
     }
@@ -1410,14 +1427,16 @@ export const FormItemStore = StoreNode.named('FormItemStore')
           group.items.forEach(item => {
             if (self !== item) {
               options.push(
-                ...item.selectedOptions.map((item: any) => item && item.value)
+                ...item.selectedOptions.map(
+                  (item: any) => item && item[valueField]
+                )
               );
             }
           });
 
         if (filteredOptions.length && options.length) {
           filteredOptions = mapTree(filteredOptions, item => {
-            if (~options.indexOf(item.value)) {
+            if (~options.indexOf(item[valueField])) {
               return {
                 ...item,
                 disabled: true
@@ -1521,7 +1540,13 @@ export const FormItemStore = StoreNode.named('FormItemStore')
         | 'input' // 用户交互改变
         | 'defaultValue' // 默认值
     ) {
-      self.tmpValue = value;
+      // 清除因extraName导致清空时value为空值数组，进而导致必填校验不生效的异常情况
+      if (self.extraName && Array.isArray(value)) {
+        self.tmpValue = value.filter(item => item).length ? value : '';
+      } else {
+        self.tmpValue = value;
+      }
+
       if (changeReason) {
         self.changeMotivation = changeReason;
       }

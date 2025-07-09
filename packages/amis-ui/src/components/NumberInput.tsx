@@ -169,12 +169,14 @@ export class NumberInput extends React.Component<NumberProps, NumberState> {
       }
     }
     /**
-     * 非大数模式下，如果精度不满足要求，需要处理value值，遵循四舍五入的处理规则
+     * 非大数模式下，如果精度不满足要求，需要处理value值，只做精度处理，不做四舍五入
      */
     if (!isBig && getNumberPrecision(value) !== precision) {
-      value = getMiniDecimal(
-        toFixed(num2str(value), '.', precision)
-      ).toNumber();
+      const multiplier = Math.pow(10, precision);
+      const truncatedValue =
+        Math.trunc(getMiniDecimal(value).multi(multiplier).toNumber()) /
+        multiplier;
+      value = getMiniDecimal(truncatedValue).toNumber();
     }
 
     return value;
@@ -351,8 +353,6 @@ export class NumberInput extends React.Component<NumberProps, NumberState> {
       classnames: cx,
       step,
       precision,
-      max,
-      min,
       disabled,
       placeholder,
       showSteps,
@@ -371,10 +371,12 @@ export class NumberInput extends React.Component<NumberProps, NumberState> {
       testIdBuilder
     } = this.props;
 
-    let {value} = this.props;
+    let {value, max, min} = this.props;
     //需要展示百分号的情况下,数值乘100显示,注意精度丢失问题
     if (showAsPercent && suffix == '%' && value) {
       value = parseFloat((Number(value) * 100).toFixed(precision));
+      max = max != null ? Math.round(Number(max) * 100) : max;
+      min = min != null ? Math.round(Number(min) * 100) : min;
     }
     const precisionProps: any = {
       precision: NumberInput.normalizePrecision(precision, step)

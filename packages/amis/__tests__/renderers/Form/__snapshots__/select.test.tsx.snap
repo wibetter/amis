@@ -17,6 +17,7 @@ exports[`Renderer: chained select 1`] = `
         >
           <div
             class="cxd-Panel cxd-Panel--default cxd-Panel--form"
+            data-role="container"
           >
             <div
               class="cxd-Panel-heading"
@@ -25,7 +26,7 @@ exports[`Renderer: chained select 1`] = `
                 class="cxd-Panel-title"
               >
                 <span
-                  class="cxd-TplField"
+                  class="cxd-TplField fr-view"
                 >
                   <span>
                     表单
@@ -46,6 +47,7 @@ exports[`Renderer: chained select 1`] = `
                 />
                 <div
                   class="cxd-Form-item cxd-Form-item--normal"
+                  data-amis-name="a"
                   data-role="form-item"
                 >
                   <label
@@ -53,7 +55,7 @@ exports[`Renderer: chained select 1`] = `
                   >
                     <span>
                       <span
-                        class="cxd-TplField"
+                        class="cxd-TplField fr-view"
                       >
                         <span>
                           带搜索
@@ -135,6 +137,7 @@ exports[`Renderer:select associated 1`] = `
         >
           <div
             class="cxd-Panel cxd-Panel--default cxd-Panel--form"
+            data-role="container"
           >
             <div
               class="cxd-Panel-heading"
@@ -143,7 +146,7 @@ exports[`Renderer:select associated 1`] = `
                 class="cxd-Panel-title"
               >
                 <span
-                  class="cxd-TplField"
+                  class="cxd-TplField fr-view"
                 >
                   <span>
                     表单
@@ -164,6 +167,7 @@ exports[`Renderer:select associated 1`] = `
                 />
                 <div
                   class="cxd-Form-item cxd-Form-item--normal"
+                  data-amis-name="b"
                   data-role="form-item"
                 >
                   <label
@@ -171,7 +175,7 @@ exports[`Renderer:select associated 1`] = `
                   >
                     <span>
                       <span
-                        class="cxd-TplField"
+                        class="cxd-TplField fr-view"
                       >
                         <span>
                           关联选择模式
@@ -240,6 +244,7 @@ exports[`Renderer:select associated mode with virtual 1`] = `
 <div>
   <div
     class="cxd-Panel cxd-Panel--default cxd-Panel--form"
+    data-role="container"
   >
     <div
       class="cxd-Panel-heading"
@@ -248,7 +253,7 @@ exports[`Renderer:select associated mode with virtual 1`] = `
         class="cxd-Panel-title"
       >
         <span
-          class="cxd-TplField"
+          class="cxd-TplField fr-view"
         >
           <span>
             表单
@@ -269,6 +274,7 @@ exports[`Renderer:select associated mode with virtual 1`] = `
         />
         <div
           class="cxd-Form-item cxd-Form-item--normal"
+          data-amis-name="select"
           data-role="form-item"
         >
           <label
@@ -276,7 +282,7 @@ exports[`Renderer:select associated mode with virtual 1`] = `
           >
             <span>
               <span
-                class="cxd-TplField"
+                class="cxd-TplField fr-view"
               >
                 <span>
                   级联
@@ -314,9 +320,9 @@ exports[`Renderer:select associated mode with virtual 1`] = `
               </div>
             </div>
             <div
-              class="cxd-PopOver cxd-TransferDropDown-popover cxd-PopOver--leftBottomLeftTop cxd-PopOver--v-top"
+              class="cxd-PopOver cxd-TransferDropDown-popover"
               role="popover"
-              style="display: block; min-width: 100px; left: 0px; top: 0px;"
+              style="display: block; min-width: 100px; left: 0px; top: 0px; visibility: hidden;"
               theme="cxd"
             >
               <div
@@ -592,6 +598,7 @@ exports[`Renderer:select chained 1`] = `
         >
           <div
             class="cxd-Panel cxd-Panel--default cxd-Panel--form"
+            data-role="container"
           >
             <div
               class="cxd-Panel-heading"
@@ -600,7 +607,7 @@ exports[`Renderer:select chained 1`] = `
                 class="cxd-Panel-title"
               >
                 <span
-                  class="cxd-TplField"
+                  class="cxd-TplField fr-view"
                 >
                   <span>
                     表单
@@ -621,6 +628,7 @@ exports[`Renderer:select chained 1`] = `
                 />
                 <div
                   class="cxd-Form-item cxd-Form-item--normal"
+                  data-amis-name="a"
                   data-role="form-item"
                 >
                   <label
@@ -628,7 +636,7 @@ exports[`Renderer:select chained 1`] = `
                   >
                     <span>
                       <span
-                        class="cxd-TplField"
+                        class="cxd-TplField fr-view"
                       >
                         <span>
                           级联选择
@@ -697,6 +705,7 @@ exports[`Renderer:select chained mode with virtual 1`] = `
 <div>
   <div
     class="cxd-Panel cxd-Panel--default cxd-Panel--form"
+    data-role="container"
   >
     <div
       class="cxd-Panel-heading"
@@ -705,7 +714,7 @@ exports[`Renderer:select chained mode with virtual 1`] = `
         class="cxd-Panel-title"
       >
         <span
-          class="cxd-TplField"
+          class="cxd-TplField fr-view"
         >
           <span>
             表单
@@ -726,6 +735,7 @@ exports[`Renderer:select chained mode with virtual 1`] = `
         />
         <div
           class="cxd-Form-item cxd-Form-item--normal"
+          data-amis-name="select"
           data-role="form-item"
         >
           <label
@@ -733,7 +743,7 @@ exports[`Renderer:select chained mode with virtual 1`] = `
           >
             <span>
               <span
-                class="cxd-TplField"
+                class="cxd-TplField fr-view"
               >
                 <span>
                   级联
@@ -771,9 +781,9 @@ exports[`Renderer:select chained mode with virtual 1`] = `
               </div>
             </div>
             <div
-              class="cxd-PopOver cxd-TransferDropDown-popover cxd-PopOver--leftBottomLeftTop cxd-PopOver--v-top"
+              class="cxd-PopOver cxd-TransferDropDown-popover"
               role="popover"
-              style="display: block; min-width: 100px; left: 0px; top: 0px;"
+              style="display: block; min-width: 100px; left: 0px; top: 0px; visibility: hidden;"
               theme="cxd"
             >
               <div
@@ -941,6 +951,7 @@ exports[`Renderer:select group 1`] = `
         >
           <div
             class="cxd-Panel cxd-Panel--default cxd-Panel--form"
+            data-role="container"
           >
             <div
               class="cxd-Panel-heading"
@@ -949,7 +960,7 @@ exports[`Renderer:select group 1`] = `
                 class="cxd-Panel-title"
               >
                 <span
-                  class="cxd-TplField"
+                  class="cxd-TplField fr-view"
                 >
                   <span>
                     表单
@@ -970,6 +981,7 @@ exports[`Renderer:select group 1`] = `
                 />
                 <div
                   class="cxd-Form-item cxd-Form-item--normal"
+                  data-amis-name="a"
                   data-role="form-item"
                 >
                   <label
@@ -977,7 +989,7 @@ exports[`Renderer:select group 1`] = `
                   >
                     <span>
                       <span
-                        class="cxd-TplField"
+                        class="cxd-TplField fr-view"
                       >
                         <span>
                           分组
@@ -1046,6 +1058,7 @@ exports[`Renderer:select group mode with virtual 1`] = `
 <div>
   <div
     class="cxd-Panel cxd-Panel--default cxd-Panel--form"
+    data-role="container"
   >
     <div
       class="cxd-Panel-heading"
@@ -1054,7 +1067,7 @@ exports[`Renderer:select group mode with virtual 1`] = `
         class="cxd-Panel-title"
       >
         <span
-          class="cxd-TplField"
+          class="cxd-TplField fr-view"
         >
           <span>
             表单
@@ -1075,6 +1088,7 @@ exports[`Renderer:select group mode with virtual 1`] = `
         />
         <div
           class="cxd-Form-item cxd-Form-item--normal"
+          data-amis-name="select"
           data-role="form-item"
         >
           <label
@@ -1082,7 +1096,7 @@ exports[`Renderer:select group mode with virtual 1`] = `
           >
             <span>
               <span
-                class="cxd-TplField"
+                class="cxd-TplField fr-view"
               >
                 <span>
                   分组
@@ -1120,9 +1134,9 @@ exports[`Renderer:select group mode with virtual 1`] = `
               </div>
             </div>
             <div
-              class="cxd-PopOver cxd-TransferDropDown-popover cxd-PopOver--leftBottomLeftTop cxd-PopOver--v-top"
+              class="cxd-PopOver cxd-TransferDropDown-popover"
               role="popover"
-              style="display: block; min-width: 100px; left: 0px; top: 0px;"
+              style="display: block; min-width: 100px; left: 0px; top: 0px; visibility: hidden;"
               theme="cxd"
             >
               <div
@@ -1254,6 +1268,7 @@ exports[`Renderer:select menutpl 1`] = `
         >
           <div
             class="cxd-Panel cxd-Panel--default cxd-Panel--form"
+            data-role="container"
           >
             <div
               class="cxd-Panel-heading"
@@ -1262,7 +1277,7 @@ exports[`Renderer:select menutpl 1`] = `
                 class="cxd-Panel-title"
               >
                 <span
-                  class="cxd-TplField"
+                  class="cxd-TplField fr-view"
                 >
                   <span>
                     表单
@@ -1283,6 +1298,7 @@ exports[`Renderer:select menutpl 1`] = `
                 />
                 <div
                   class="cxd-Form-item cxd-Form-item--normal"
+                  data-amis-name="select"
                   data-role="form-item"
                 >
                   <label
@@ -1290,7 +1306,7 @@ exports[`Renderer:select menutpl 1`] = `
                   >
                     <span>
                       <span
-                        class="cxd-TplField"
+                        class="cxd-TplField fr-view"
                       >
                         <span>
                           选项
@@ -1371,6 +1387,7 @@ exports[`Renderer:select table 1`] = `
         >
           <div
             class="cxd-Panel cxd-Panel--default cxd-Panel--form"
+            data-role="container"
           >
             <div
               class="cxd-Panel-heading"
@@ -1379,7 +1396,7 @@ exports[`Renderer:select table 1`] = `
                 class="cxd-Panel-title"
               >
                 <span
-                  class="cxd-TplField"
+                  class="cxd-TplField fr-view"
                 >
                   <span>
                     表单
@@ -1400,6 +1417,7 @@ exports[`Renderer:select table 1`] = `
                 />
                 <div
                   class="cxd-Form-item cxd-Form-item--normal"
+                  data-amis-name="a"
                   data-role="form-item"
                 >
                   <label
@@ -1407,7 +1425,7 @@ exports[`Renderer:select table 1`] = `
                   >
                     <span>
                       <span
-                        class="cxd-TplField"
+                        class="cxd-TplField fr-view"
                       >
                         <span>
                           表格形式
@@ -1476,6 +1494,7 @@ exports[`Renderer:select table mode with virtual 1`] = `
 <div>
   <div
     class="cxd-Panel cxd-Panel--default cxd-Panel--form"
+    data-role="container"
   >
     <div
       class="cxd-Panel-heading"
@@ -1484,7 +1503,7 @@ exports[`Renderer:select table mode with virtual 1`] = `
         class="cxd-Panel-title"
       >
         <span
-          class="cxd-TplField"
+          class="cxd-TplField fr-view"
         >
           <span>
             表单
@@ -1505,6 +1524,7 @@ exports[`Renderer:select table mode with virtual 1`] = `
         />
         <div
           class="cxd-Form-item cxd-Form-item--normal"
+          data-amis-name="select"
           data-role="form-item"
         >
           <label
@@ -1512,7 +1532,7 @@ exports[`Renderer:select table mode with virtual 1`] = `
           >
             <span>
               <span
-                class="cxd-TplField"
+                class="cxd-TplField fr-view"
               >
                 <span>
                   表格
@@ -1550,9 +1570,9 @@ exports[`Renderer:select table mode with virtual 1`] = `
               </div>
             </div>
             <div
-              class="cxd-PopOver cxd-TransferDropDown-popover cxd-PopOver--leftBottomLeftTop cxd-PopOver--v-top"
+              class="cxd-PopOver cxd-TransferDropDown-popover"
               role="popover"
-              style="display: block; min-width: 100px; left: 0px; top: 0px;"
+              style="display: block; min-width: 100px; left: 0px; top: 0px; visibility: hidden;"
               theme="cxd"
             >
               <div
@@ -1703,6 +1723,7 @@ exports[`Renderer:select table with labelField & valueField 1`] = `
 <div>
   <div
     class="cxd-Panel cxd-Panel--default cxd-Panel--form"
+    data-role="container"
   >
     <div
       class="cxd-Panel-heading"
@@ -1711,7 +1732,7 @@ exports[`Renderer:select table with labelField & valueField 1`] = `
         class="cxd-Panel-title"
       >
         <span
-          class="cxd-TplField"
+          class="cxd-TplField fr-view"
         >
           <span>
             表单
@@ -1732,6 +1753,7 @@ exports[`Renderer:select table with labelField & valueField 1`] = `
         />
         <div
           class="cxd-Form-item cxd-Form-item--normal"
+          data-amis-name="a"
           data-role="form-item"
         >
           <label
@@ -1739,7 +1761,7 @@ exports[`Renderer:select table with labelField & valueField 1`] = `
           >
             <span>
               <span
-                class="cxd-TplField"
+                class="cxd-TplField fr-view"
               >
                 <span>
                   表格形式
@@ -1762,6 +1784,7 @@ exports[`Renderer:select table with labelField & valueField 1`] = `
                 >
                   <span
                     class="cxd-ResultBox-valueLabel"
+                    data-index="0"
                   >
                     诸葛亮
                   </span>
@@ -1779,6 +1802,7 @@ exports[`Renderer:select table with labelField & valueField 1`] = `
                 >
                   <span
                     class="cxd-ResultBox-valueLabel"
+                    data-index="1"
                   >
                     李白
                   </span>
@@ -1806,9 +1830,9 @@ exports[`Renderer:select table with labelField & valueField 1`] = `
               </div>
             </div>
             <div
-              class="cxd-PopOver cxd-TransferDropDown-popover cxd-PopOver--leftBottomLeftTop cxd-PopOver--v-top"
+              class="cxd-PopOver cxd-TransferDropDown-popover"
               role="popover"
-              style="display: block; min-width: 100px; left: 0px; top: 0px;"
+              style="display: block; min-width: 100px; left: 0px; top: 0px; visibility: hidden;"
               theme="cxd"
             >
               <div
@@ -1832,13 +1856,17 @@ exports[`Renderer:select table with labelField & valueField 1`] = `
                             class="cxd-Table-checkCell"
                           >
                             <label
-                              class="cxd-Checkbox cxd-Checkbox--checkbox cxd-Checkbox--sm"
+                              class="cxd-Checkbox cxd-Checkbox--checkbox--default cxd-Checkbox--partial cxd-Checkbox--sm checked cxd-Checkbox--checkbox--default--checked"
                               data-role="checkbox"
                             >
                               <input
                                 type="checkbox"
                               />
-                              <i />
+                              <i>
+                                <div
+                                  class="checkbox-icon icon"
+                                />
+                              </i>
                               <span
                                 class=""
                               />
@@ -1860,13 +1888,17 @@ exports[`Renderer:select table with labelField & valueField 1`] = `
                             class="cxd-Table-checkCell"
                           >
                             <label
-                              class="cxd-Checkbox cxd-Checkbox--checkbox cxd-Checkbox--full cxd-Checkbox--sm"
+                              class="cxd-Checkbox cxd-Checkbox--checkbox--default cxd-Checkbox--sm checked cxd-Checkbox--checkbox--default--checked"
                               data-role="checkbox"
                             >
                               <input
                                 type="checkbox"
                               />
-                              <i />
+                              <i>
+                                <div
+                                  class="checkbox-icon icon"
+                                />
+                              </i>
                               <span
                                 class=""
                               />
@@ -1890,13 +1922,17 @@ exports[`Renderer:select table with labelField & valueField 1`] = `
                             class="cxd-Table-checkCell"
                           >
                             <label
-                              class="cxd-Checkbox cxd-Checkbox--checkbox cxd-Checkbox--full cxd-Checkbox--sm"
+                              class="cxd-Checkbox cxd-Checkbox--checkbox--default cxd-Checkbox--sm"
                               data-role="checkbox"
                             >
                               <input
                                 type="checkbox"
                               />
-                              <i />
+                              <i>
+                                <div
+                                  class="checkbox-icon icon"
+                                />
+                              </i>
                               <span
                                 class=""
                               />
@@ -1920,13 +1956,17 @@ exports[`Renderer:select table with labelField & valueField 1`] = `
                             class="cxd-Table-checkCell"
                           >
                             <label
-                              class="cxd-Checkbox cxd-Checkbox--checkbox cxd-Checkbox--full cxd-Checkbox--sm"
+                              class="cxd-Checkbox cxd-Checkbox--checkbox--default cxd-Checkbox--sm"
                               data-role="checkbox"
                             >
                               <input
                                 type="checkbox"
                               />
-                              <i />
+                              <i>
+                                <div
+                                  class="checkbox-icon icon"
+                                />
+                              </i>
                               <span
                                 class=""
                               />
@@ -1950,13 +1990,17 @@ exports[`Renderer:select table with labelField & valueField 1`] = `
                             class="cxd-Table-checkCell"
                           >
                             <label
-                              class="cxd-Checkbox cxd-Checkbox--checkbox cxd-Checkbox--full cxd-Checkbox--sm"
+                              class="cxd-Checkbox cxd-Checkbox--checkbox--default cxd-Checkbox--sm checked cxd-Checkbox--checkbox--default--checked"
                               data-role="checkbox"
                             >
                               <input
                                 type="checkbox"
                               />
-                              <i />
+                              <i>
+                                <div
+                                  class="checkbox-icon icon"
+                                />
+                              </i>
                               <span
                                 class=""
                               />
@@ -1980,13 +2024,17 @@ exports[`Renderer:select table with labelField & valueField 1`] = `
                             class="cxd-Table-checkCell"
                           >
                             <label
-                              class="cxd-Checkbox cxd-Checkbox--checkbox cxd-Checkbox--full cxd-Checkbox--sm"
+                              class="cxd-Checkbox cxd-Checkbox--checkbox--default cxd-Checkbox--sm"
                               data-role="checkbox"
                             >
                               <input
                                 type="checkbox"
                               />
-                              <i />
+                              <i>
+                                <div
+                                  class="checkbox-icon icon"
+                                />
+                              </i>
                               <span
                                 class=""
                               />
@@ -2010,13 +2058,17 @@ exports[`Renderer:select table with labelField & valueField 1`] = `
                             class="cxd-Table-checkCell"
                           >
                             <label
-                              class="cxd-Checkbox cxd-Checkbox--checkbox cxd-Checkbox--full cxd-Checkbox--sm"
+                              class="cxd-Checkbox cxd-Checkbox--checkbox--default cxd-Checkbox--sm"
                               data-role="checkbox"
                             >
                               <input
                                 type="checkbox"
                               />
-                              <i />
+                              <i>
+                                <div
+                                  class="checkbox-icon icon"
+                                />
+                              </i>
                               <span
                                 class=""
                               />
@@ -2086,6 +2138,7 @@ exports[`Renderer:select tree 1`] = `
         >
           <div
             class="cxd-Panel cxd-Panel--default cxd-Panel--form"
+            data-role="container"
           >
             <div
               class="cxd-Panel-heading"
@@ -2094,7 +2147,7 @@ exports[`Renderer:select tree 1`] = `
                 class="cxd-Panel-title"
               >
                 <span
-                  class="cxd-TplField"
+                  class="cxd-TplField fr-view"
                 >
                   <span>
                     表单
@@ -2115,6 +2168,7 @@ exports[`Renderer:select tree 1`] = `
                 />
                 <div
                   class="cxd-Form-item cxd-Form-item--normal"
+                  data-amis-name="a"
                   data-role="form-item"
                 >
                   <label
@@ -2122,7 +2176,7 @@ exports[`Renderer:select tree 1`] = `
                   >
                     <span>
                       <span
-                        class="cxd-TplField"
+                        class="cxd-TplField fr-view"
                       >
                         <span>
                           树型展示
@@ -2191,6 +2245,7 @@ exports[`Renderer:select virtual 1`] = `
 <div>
   <div
     class="cxd-Panel cxd-Panel--default cxd-Panel--form"
+    data-role="container"
   >
     <div
       class="cxd-Panel-heading"
@@ -2199,7 +2254,7 @@ exports[`Renderer:select virtual 1`] = `
         class="cxd-Panel-title"
       >
         <span
-          class="cxd-TplField"
+          class="cxd-TplField fr-view"
         >
           <span>
             表单
@@ -2220,6 +2275,7 @@ exports[`Renderer:select virtual 1`] = `
         />
         <div
           class="cxd-Form-item cxd-Form-item--normal"
+          data-amis-name="select"
           data-role="form-item"
         >
           <label
@@ -2227,7 +2283,7 @@ exports[`Renderer:select virtual 1`] = `
           >
             <span>
               <span
-                class="cxd-TplField"
+                class="cxd-TplField fr-view"
               >
                 <span>
                   选项
@@ -2264,9 +2320,9 @@ exports[`Renderer:select virtual 1`] = `
                 />
               </span>
               <div
-                class="cxd-PopOver cxd-Select-popover cxd-PopOver--leftBottomLeftTop cxd-PopOver--v-top"
+                class="cxd-PopOver cxd-Select-popover"
                 role="popover"
-                style="display: block; width: auto; left: 0px; top: 0px;"
+                style="display: block; width: auto; left: 0px; top: 0px; visibility: hidden;"
                 theme="cxd"
               >
                 <div

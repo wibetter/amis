@@ -17,6 +17,7 @@ exports[`Renderer: range with min & max & step by variables 1`] = `
         >
           <div
             class="cxd-Panel cxd-Panel--default cxd-Panel--form"
+            data-role="container"
           >
             <div
               class="cxd-Panel-heading"
@@ -25,7 +26,7 @@ exports[`Renderer: range with min & max & step by variables 1`] = `
                 class="cxd-Panel-title"
               >
                 <span
-                  class="cxd-TplField"
+                  class="cxd-TplField fr-view"
                 >
                   <span>
                     表单
@@ -46,6 +47,7 @@ exports[`Renderer: range with min & max & step by variables 1`] = `
                 />
                 <div
                   class="cxd-Form-item cxd-Form-item--normal"
+                  data-amis-name="range"
                   data-role="form-item"
                 >
                   <label
@@ -53,7 +55,7 @@ exports[`Renderer: range with min & max & step by variables 1`] = `
                   >
                     <span>
                       <span
-                        class="cxd-TplField"
+                        class="cxd-TplField fr-view"
                       >
                         <span>
                           滑块
@@ -186,6 +188,7 @@ exports[`Renderer:range with marks 1`] = `
 <div>
   <div
     class="cxd-Panel cxd-Panel--default cxd-Panel--form"
+    data-role="container"
   >
     <div
       class="cxd-Panel-heading"
@@ -194,7 +197,7 @@ exports[`Renderer:range with marks 1`] = `
         class="cxd-Panel-title"
       >
         <span
-          class="cxd-TplField"
+          class="cxd-TplField fr-view"
         >
           <span>
             The form
@@ -215,6 +218,7 @@ exports[`Renderer:range with marks 1`] = `
         />
         <div
           class="cxd-Form-item cxd-Form-item--normal"
+          data-amis-name="range"
           data-role="form-item"
         >
           <div
@@ -328,6 +332,7 @@ exports[`Renderer:range with min & max & step & joinValues 1`] = `
 <div>
   <div
     class="cxd-Panel cxd-Panel--default cxd-Panel--form"
+    data-role="container"
   >
     <div
       class="cxd-Panel-heading"
@@ -336,7 +341,7 @@ exports[`Renderer:range with min & max & step & joinValues 1`] = `
         class="cxd-Panel-title"
       >
         <span
-          class="cxd-TplField"
+          class="cxd-TplField fr-view"
         >
           <span>
             表单
@@ -357,6 +362,7 @@ exports[`Renderer:range with min & max & step & joinValues 1`] = `
         />
         <div
           class="cxd-Form-item cxd-Form-item--normal"
+          data-amis-name="range"
           data-role="form-item"
         >
           <div
@@ -550,6 +556,7 @@ exports[`Renderer:range with multiple & clearable & delimiter 1`] = `
 <div>
   <div
     class="cxd-Panel cxd-Panel--default cxd-Panel--form"
+    data-role="container"
   >
     <div
       class="cxd-Panel-heading"
@@ -558,7 +565,7 @@ exports[`Renderer:range with multiple & clearable & delimiter 1`] = `
         class="cxd-Panel-title"
       >
         <span
-          class="cxd-TplField"
+          class="cxd-TplField fr-view"
         >
           <span>
             The form
@@ -579,6 +586,7 @@ exports[`Renderer:range with multiple & clearable & delimiter 1`] = `
         />
         <div
           class="cxd-Form-item cxd-Form-item--normal"
+          data-amis-name="range"
           data-role="form-item"
         >
           <div
@@ -740,6 +748,7 @@ exports[`Renderer:range with multiple & clearable & delimiter 1`] = `
         </div>
         <div
           class="cxd-Form-item cxd-Form-item--normal"
+          data-amis-name="range"
           data-role="form-item"
         >
           <div
@@ -766,6 +775,7 @@ exports[`Renderer:range with showInput & showInputUnit 1`] = `
 <div>
   <div
     class="cxd-Panel cxd-Panel--default cxd-Panel--form"
+    data-role="container"
   >
     <div
       class="cxd-Panel-heading"
@@ -774,7 +784,7 @@ exports[`Renderer:range with showInput & showInputUnit 1`] = `
         class="cxd-Panel-title"
       >
         <span
-          class="cxd-TplField"
+          class="cxd-TplField fr-view"
         >
           <span>
             The form
@@ -795,6 +805,7 @@ exports[`Renderer:range with showInput & showInputUnit 1`] = `
         />
         <div
           class="cxd-Form-item cxd-Form-item--normal"
+          data-amis-name="range"
           data-role="form-item"
         >
           <div
@@ -907,6 +918,7 @@ exports[`Renderer:range with showSteps 1`] = `
 <div>
   <div
     class="cxd-Panel cxd-Panel--default cxd-Panel--form"
+    data-role="container"
   >
     <div
       class="cxd-Panel-heading"
@@ -915,7 +927,7 @@ exports[`Renderer:range with showSteps 1`] = `
         class="cxd-Panel-title"
       >
         <span
-          class="cxd-TplField"
+          class="cxd-TplField fr-view"
         >
           <span>
             The form
@@ -936,6 +948,7 @@ exports[`Renderer:range with showSteps 1`] = `
         />
         <div
           class="cxd-Form-item cxd-Form-item--normal"
+          data-amis-name="range"
           data-role="form-item"
         >
           <div
@@ -1081,6 +1094,7 @@ exports[`Renderer:range with tooltipVisible & tooltipPlacement 1`] = `
 <div>
   <div
     class="cxd-Panel cxd-Panel--default cxd-Panel--form"
+    data-role="container"
   >
     <div
       class="cxd-Panel-heading"
@@ -1089,7 +1103,7 @@ exports[`Renderer:range with tooltipVisible & tooltipPlacement 1`] = `
         class="cxd-Panel-title"
       >
         <span
-          class="cxd-TplField"
+          class="cxd-TplField fr-view"
         >
           <span>
             The form
@@ -1110,6 +1124,7 @@ exports[`Renderer:range with tooltipVisible & tooltipPlacement 1`] = `
         />
         <div
           class="cxd-Form-item cxd-Form-item--normal"
+          data-amis-name="range"
           data-role="form-item"
         >
           <div

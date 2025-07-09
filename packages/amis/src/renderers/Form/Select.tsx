@@ -229,7 +229,7 @@ export default class SelectControl extends React.Component<SelectProps, any> {
   }
 
   focus() {
-    this.input && this.input.focus();
+    this.input && this.input?.focus?.();
   }
 
   getValue(
@@ -330,7 +330,7 @@ export default class SelectControl extends React.Component<SelectProps, any> {
 
   fetchCancel: Function | null = null;
 
-  async loadRemote(input: string) {
+  async loadRemote(input: string, force = false) {
     const {
       autoComplete,
       env,
@@ -345,9 +345,12 @@ export default class SelectControl extends React.Component<SelectProps, any> {
       throw new Error('fetcher is required');
     }
 
-    if (formInited === false && addHook) {
+    if (!force && formInited === false && addHook) {
       this.unHook && this.unHook();
-      return (this.unHook = addHook(this.loadRemote.bind(this, input), 'init'));
+      return (this.unHook = addHook(
+        this.loadRemote.bind(this, input, true),
+        'init'
+      ));
     }
 
     this.lastTerm = input;
@@ -428,9 +431,9 @@ export default class SelectControl extends React.Component<SelectProps, any> {
     });
   }
 
-  reload() {
+  reload(subpath?: string, query?: any) {
     const reload = this.props.reloadOptions;
-    reload && reload();
+    reload && reload(subpath, query);
   }
 
   option2value() {}
@@ -458,6 +461,64 @@ export default class SelectControl extends React.Component<SelectProps, any> {
       const value = this.getValue({[valueField]: pristineVal ?? ''});
       onChange?.(value);
     }
+  }
+
+  @autobind
+  handleOptionAdd(
+    idx: number | Array<number> = -1,
+    value?: any,
+    skipForm: boolean = false,
+    callback?: (value: any) => any
+  ) {
+    const {onAdd, autoComplete} = this.props;
+
+    onAdd?.(idx, value, skipForm, async () => {
+      callback?.(value);
+
+      if (autoComplete) {
+        await this.loadRemote(this.lastTerm);
+        return false;
+      }
+
+      return;
+    });
+  }
+
+  @autobind
+  handleOptionEdit(
+    value: Option,
+    origin?: Option,
+    skipForm?: boolean,
+    callback?: (value: any) => any
+  ) {
+    const {onEdit, autoComplete} = this.props;
+
+    onEdit?.(value, origin, skipForm, async () => {
+      callback?.(value);
+
+      if (autoComplete) {
+        await this.loadRemote(this.lastTerm);
+        return false;
+      }
+
+      return;
+    });
+  }
+
+  @autobind
+  handleOptionDelete(value: any, callback?: (value: any) => any) {
+    const {onDelete, autoComplete} = this.props;
+
+    onDelete?.(value, async () => {
+      callback?.(value);
+
+      if (autoComplete) {
+        await this.loadRemote(this.lastTerm);
+        return false;
+      }
+
+      return;
+    });
   }
 
   @supportStatic()
@@ -510,6 +571,9 @@ export default class SelectControl extends React.Component<SelectProps, any> {
         ) : (
           <Select
             {...rest}
+            onAdd={this.handleOptionAdd}
+            onEdit={this.handleOptionEdit}
+            onDelete={this.handleOptionDelete}
             className={cx(
               setThemeClassName({
                 ...this.props,
@@ -658,7 +722,8 @@ class TransferDropdownRenderer extends BaseTransferRenderer<TransferDropDownProp
       showInvalidMatch,
       checkAll,
       checkAllLabel,
-      overlay
+      overlay,
+      valueField
     } = this.props;
 
     // 目前 LeftOptions 没有接口可以动态加载
@@ -715,6 +780,7 @@ class TransferDropdownRenderer extends BaseTransferRenderer<TransferDropDownProp
           checkAllLabel={checkAllLabel}
           checkAll={checkAll}
           overlay={overlay}
+          valueField={valueField}
         />
 
         <Spinner

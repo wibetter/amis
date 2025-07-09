@@ -86,6 +86,7 @@ export interface RowSelectionOptionProps {
 export interface RowSelectionProps {
   type: string;
   rowClick?: boolean; // 点击复选框选中还是点击整行选中
+  rowClickIgControl?: boolean; // 点击行或控件，均触发Row的onClick事件
   fixed: boolean; // 只能固定在左边
   selectedRowKeys: Array<string | number>;
   keyField?: string; // 默认是key，可自定义
@@ -690,7 +691,10 @@ export class Table extends React.PureComponent<TableProps, TableState> {
       onSelectAll,
       onFilter,
       testIdBuilder,
-      headerClassName
+      headerClassName,
+      sticky,
+      autoFillHeight,
+      scroll
     } = this.props;
 
     const rowSelectionKeyField = this.getRowSelectionKeyField();
@@ -702,9 +706,13 @@ export class Table extends React.PureComponent<TableProps, TableState> {
           })
         : dataSource;
 
+    const hasScrollY = scroll && scroll.y;
+    const selfSticky = !!(hasScrollY || (sticky && autoFillHeight));
+
     return (
       <Head
         key="thead"
+        selfSticky={selfSticky}
         columns={columns}
         draggable={!!draggable}
         selectable={!!rowSelection}
@@ -1053,6 +1061,7 @@ export class Table extends React.PureComponent<TableProps, TableState> {
         selectable={!!rowSelection}
         rowSelectionFixed={!!rowSelection?.fixed}
         rowSelectionType={rowSelection?.type || 'checkbox'}
+        rowClickIgControl={!!rowSelection?.rowClickIgControl}
         expandable={!!expandable}
         expandableFixed={expandable?.fixed}
         expandedRowClassName={expandedRowClassName}
@@ -1122,6 +1131,7 @@ export class Table extends React.PureComponent<TableProps, TableState> {
     );
     return (
       <tbody ref={this.tbodyDom} className={cx('Table-tbody')}>
+        {dataSource.map((data, index) => this.renderRow(data, index, []))}
         {!hasScrollY && !sticky && headSummary
           ? this.renderSummaryRow(headSummary)
           : null}
@@ -1159,9 +1169,7 @@ export class Table extends React.PureComponent<TableProps, TableState> {
               </div>
             </Cell>
           </tr>
-        ) : (
-          dataSource.map((data, index) => this.renderRow(data, index, []))
-        )}
+        ) : null}
       </tbody>
     );
   }
@@ -1465,6 +1473,7 @@ export class Table extends React.PureComponent<TableProps, TableState> {
   }
 
   renderScrollTable() {
+    // todo 这个模式有个很大的问题就是依赖 tablelayout 的 fixed 模式，这就意味这列的宽度都得配置
     const {footSummary, classnames: cx} = this.props;
 
     return (
@@ -1483,7 +1492,7 @@ export class Table extends React.PureComponent<TableProps, TableState> {
       return;
     }
     const cols = [].slice.call(
-      tbodyDom?.querySelectorAll(':scope>tr>td[data-col]')
+      tbodyDom?.querySelectorAll(':scope>tr:last-child>td[data-col]')
     );
     const colWidths: any = {};
     cols.forEach((col: HTMLElement) => {
@@ -1649,6 +1658,7 @@ export class Table extends React.PureComponent<TableProps, TableState> {
       resizable,
       columns,
       sticky,
+      autoFillHeight,
       classnames: cx
     } = this.props;
 
@@ -1660,6 +1670,14 @@ export class Table extends React.PureComponent<TableProps, TableState> {
     const hasScrollY = scroll && scroll.y;
     // 是否设置了横向滚动
     const hasScrollX = scroll && scroll.x;
+
+    const style = {};
+    if (hasScrollY) {
+      Object.assign(style, {
+        overflow: 'auto scroll',
+        maxHeight: scroll.y
+      });
+    }
 
     return (
       <div
@@ -1677,10 +1695,17 @@ export class Table extends React.PureComponent<TableProps, TableState> {
           </div>
         ) : null}
 
-        {hasScrollY || sticky ? (
+        {hasScrollY && !autoFillHeight ? (
           this.renderScrollTable()
         ) : (
-          <div className={cx('Table-container')} ref={this.containerDom}>
+          <div
+            className={cx('Table-container', {
+              [cx('Table-container-self-sticky')]:
+                hasScrollY || (sticky && autoFillHeight)
+            })}
+            style={style}
+            ref={this.containerDom}
+          >
             {this.renderTable()}
           </div>
         )}

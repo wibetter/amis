@@ -1,3 +1,4 @@
+import React from 'react';
 import cx from 'classnames';
 import DeepDiff from 'deep-diff';
 import flatten from 'lodash/flatten';
@@ -19,12 +20,17 @@ import {
   EditorNodeType,
   ScaffoldForm,
   RegionConfig,
+  getI18nEnabled,
   registerEditorPlugin,
-  JSONPipeOut,
-  InsertEventContext,
-  MoveEventContext,
-  DeleteEventContext
+  JSONPipeOut
 } from 'amis-editor-core';
+import type {FormSchema} from 'amis';
+import type {
+  IFormStore,
+  IFormItemStore,
+  Schema,
+  RendererConfig
+} from 'amis-core';
 import {
   DSFeatureType,
   DSBuilderManager,
@@ -33,17 +39,14 @@ import {
   ApiDSBuilderKey
 } from '../../builder';
 import {FormOperatorMap} from '../../builder/constants';
-import {getEventControlConfig} from '../../renderer/event-control/helper';
+import {
+  getEventControlConfig,
+  getActionCommonProps
+} from '../../renderer/event-control/helper';
 import {FieldSetting} from '../../renderer/FieldSetting';
-import {_isModelComp} from '../../util';
+import {_isModelComp, generateId} from '../../util';
+import {InlineEditableElement} from 'amis-editor-core';
 
-import type {FormSchema} from 'amis/lib/Schema';
-import type {
-  IFormStore,
-  IFormItemStore,
-  Schema,
-  RendererConfig
-} from 'amis-core';
 import type {FormScaffoldConfig} from '../../builder';
 
 export type FormPluginFeat = Extract<
@@ -65,6 +68,8 @@ export class FormPlugin extends BasePlugin {
   static id = 'FormPlugin';
 
   name = '表单';
+
+  useLazyRender = true;
 
   panelTitle = '表单';
   // 关联渲染器名字
@@ -98,6 +103,7 @@ export class FormPlugin extends BasePlugin {
       {
         label: '文本框',
         type: 'input-text',
+        id: generateId(),
         name: 'text'
       }
     ]
@@ -139,12 +145,20 @@ export class FormPlugin extends BasePlugin {
     }
   ];
 
+  // 定义可以内联编辑的元素
+  inlineEditableElements: Array<InlineEditableElement> = [
+    {
+      match: ':scope.cxd-Panel .cxd-Panel-title',
+      key: 'title'
+    }
+  ];
+
   // 事件定义
   events: RendererPluginEvent[] = [
     {
       eventName: 'inited',
-      eventLabel: '初始化数据接口请求完成',
-      description: '远程初始化数据接口请求完成时触发',
+      eventLabel: '表单初始化完成',
+      description: '表单初始化完成时触发',
       // 表单数据为表单变量
       dataSchema: [
         {
@@ -321,6 +335,31 @@ export class FormPlugin extends BasePlugin {
       ]
     },
     {
+      eventName: 'initApiFinished',
+      eventLabel: '初始化数据接口请求完成',
+      description: '远程初始化数据接口请求完成时触发',
+      // 表单数据为表单变量
+      dataSchema: [
+        {
+          type: 'object',
+          properties: {
+            data: {
+              type: 'object',
+              title: '数据',
+              description: '当前数据域，可以通过.字段名读取对应的值',
+              properties: {
+                __trigger: {
+                  type: 'string',
+                  title: '触发事件',
+                  enum: ['init', 'reload']
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
       eventName: 'asyncApiFinished',
       eventLabel: '远程请求轮询结束',
       description: 'asyncApi 远程请求轮询结束后触发',
@@ -344,32 +383,53 @@ export class FormPlugin extends BasePlugin {
     {
       actionLabel: '提交表单',
       actionType: 'submit',
-      description: '触发表单提交'
+      description: '触发表单提交',
+      ...getActionCommonProps('submit')
     },
     {
       actionLabel: '重置表单',
       actionType: 'reset',
-      description: '触发表单重置'
+      description: '触发表单重置',
+      ...getActionCommonProps('reset')
     },
     {
       actionLabel: '清空表单',
       actionType: 'clear',
-      description: '触发表单清空'
+      description: '触发表单清空',
+      ...getActionCommonProps('clear')
     },
     {
       actionLabel: '校验表单',
       actionType: 'validate',
-      description: '触发表单校验'
+      description: '触发表单校验',
+      descDetail: (info: any, context: any, props: any) => {
+        return (
+          <div className="action-desc">
+            校验
+            <span className="variable-left variable-right">
+              {info?.rendererLabel}
+            </span>
+            的数据
+          </div>
+        );
+      }
     },
     {
       actionLabel: '重新加载',
       actionType: 'reload',
-      description: '触发组件数据刷新并重新渲染'
+      description: '触发组件数据刷新并重新渲染',
+      ...getActionCommonProps('reload')
     },
     {
       actionLabel: '变量赋值',
       actionType: 'setValue',
-      description: '触发组件数据更新'
+      description: '触发组件数据更新',
+      ...getActionCommonProps('setValue')
+    },
+    {
+      actionLabel: '清除校验状态',
+      actionType: 'clearError',
+      description: '清除表单校验产生的错误状态'
     }
   ];
 
@@ -610,19 +670,28 @@ export class FormPlugin extends BasePlugin {
       DSFeatureEnum.BulkEdit,
       DSFeatureEnum.View
     ];
-    if (schema.hasOwnProperty('feat')) {
-      return validFeat.includes(schema.feat)
-        ? schema.feat
-        : DSFeatureEnum.Insert;
-    }
 
-    if (schema.initApi != null && schema.api != null) {
+    // 判断表单功能类型
+    const {initApi, api, feat} = schema;
+
+    // 根据API配置判断基础功能类型
+    if (initApi && api) {
       return DSFeatureEnum.Edit;
-    } else if (schema.initApi != null && schema.api == null) {
+    }
+    if (initApi && !api) {
       return DSFeatureEnum.View;
-    } else {
+    }
+    if (!initApi && api) {
       return DSFeatureEnum.Insert;
     }
+
+    // 检查自定义功能类型
+    if (feat && validFeat.includes(feat)) {
+      return feat;
+    }
+
+    // 默认返回插入模式
+    return DSFeatureEnum.Insert;
   }
 
   panelBodyCreator = (context: BaseEventContext) => {
@@ -633,7 +702,9 @@ export class FormPlugin extends BasePlugin {
       /\/crud2\/filter\/form$/.test(context.path) ||
       /body\/0\/filter$/.test(context.schemaPath);
     /** 表单是否位于Dialog内 */
-    const isInDialog: boolean = context.path?.includes?.('dialog/');
+    const isInDialog: boolean =
+      context.path?.includes?.('dialog/') ||
+      context.path?.includes?.('drawer/');
     /** 是否使用Panel包裹 */
     const isWrapped = 'this.wrapWithPanel !== false';
     const justifyLayout = (left: number = 2) => ({
@@ -828,15 +899,21 @@ export class FormPlugin extends BasePlugin {
                 form: IFormStore
               ) => {
                 if (value !== oldValue) {
-                  form.setValues({
-                    dsType: this.dsManager.getDefaultBuilderKey(),
-                    initApi:
-                      DSFeatureEnum.Insert === value ||
-                      DSFeatureEnum.BulkEdit === value
-                        ? undefined
-                        : '',
-                    api: undefined
-                  });
+                  const newSchema: any = {
+                    dsType: this.dsManager.getDefaultBuilderKey()
+                  };
+
+                  // 批量编辑和新增需要删除获取数据接口
+                  if (
+                    DSFeatureEnum.Insert === value ||
+                    DSFeatureEnum.BulkEdit === value
+                  ) {
+                    newSchema.initApi = undefined;
+                  } else if (DSFeatureEnum.View === value) {
+                    newSchema.api = undefined;
+                  }
+                  // 删除数据源无用配置
+                  form.setValues(newSchema);
                 }
               }
             },
@@ -845,6 +922,7 @@ export class FormPlugin extends BasePlugin {
         };
       }
     };
+    const i18nEnabled = getI18nEnabled();
 
     return [
       getSchemaTpl('tabs', [
@@ -857,12 +935,10 @@ export class FormPlugin extends BasePlugin {
               {
                 title: '基本',
                 body: [
-                  {
-                    name: 'title',
-                    type: 'input-text',
+                  getSchemaTpl('pageTitle', {
                     label: '标题',
                     visibleOn: isWrapped
-                  },
+                  }),
                   getSchemaTpl('switch', {
                     name: 'autoFocus',
                     label: tipedLabel(
@@ -1061,7 +1137,7 @@ export class FormPlugin extends BasePlugin {
                       {
                         name: 'message',
                         label: '报错提示',
-                        type: 'input-text',
+                        type: i18nEnabled ? 'input-text-i18n' : 'input-text',
                         ...justifyLayout(4)
                       }
                     ]
@@ -1527,8 +1603,9 @@ export class FormPlugin extends BasePlugin {
     }
 
     if (!_isModelComp(schema)) {
-      /** 存量数据可能未设置过feat, 需要添加一下 */
-      if (!schema.feat) {
+      /** 每次需要纠正一下feat，有可能直接是编辑了代码的api */
+      const exactlyFeat = this.guessDSFeatFromSchema(schema);
+      if (exactlyFeat !== schema.feat) {
         shouldUpdateSchema = true;
         patchedSchema = {
           ...patchedSchema,

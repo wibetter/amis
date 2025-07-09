@@ -23,6 +23,8 @@ import merge from 'lodash/merge';
 import {EditorModalBody} from './store/editor';
 import {filter} from 'lodash';
 import type {SchemaType} from 'amis/lib/Schema';
+import type {DialogSchema} from 'amis/lib/renderers/Dialog';
+import type {DrawerSchema} from 'amis/lib/renderers/Drawer';
 
 const {
   guid,
@@ -788,7 +790,14 @@ export function filterSchemaForEditor(schema: any): any {
     Object.keys(schema).forEach(key => {
       const value = schema[key];
       if (
-        ~['visible', 'visibleOn', 'hidden', 'hiddenOn', 'toggled'].indexOf(key)
+        ~[
+          'visible',
+          'visibleOn',
+          'hidden',
+          'hiddenOn',
+          'toggled',
+          'animations' // 编辑态也不能有动画
+        ].indexOf(key)
       ) {
         key = `$$${key}`;
         modified = true;
@@ -1392,7 +1401,7 @@ export async function resolveVariablesFromScope(node: any, manager: any) {
     manager?.variableManager?.getVariableFormulaOptions() || [];
 
   return [...hostNodeVaraibles, ...dataPropsAsOptions, ...variables].filter(
-    (item: any) => item.children?.length
+    (item: any) => (item.children && item.children?.length) || !item.children
   );
 }
 
@@ -1850,6 +1859,107 @@ export function setDefaultColSize(
     }
   }
   return tempList;
+}
+
+export function getModals(schema: any) {
+  const modals: Array<DialogSchema | DrawerSchema> = [];
+  JSONTraverse(schema, (value: any, key: string, host: any) => {
+    if (
+      key === 'actionType' &&
+      ['dialog', 'drawer', 'confirmDialog'].includes(value)
+    ) {
+      const key = value === 'drawer' ? 'drawer' : 'dialog';
+      const body = host[key] || host['args'];
+      if (body && !body.$ref && !modals.find(item => item.$$id === body.$$id)) {
+        modals.push({
+          ...body,
+          type: key,
+          actionType: value,
+          $$ref: undefined
+        });
+      }
+    }
+    return value;
+  });
+
+  // 公共组件排在前面
+  Object.keys(schema.definitions || {})
+    .reverse()
+    .forEach(key => {
+      const definition = schema.definitions[key];
+      if (definition && ['dialog', 'drawer'].includes(definition.type)) {
+        // 不要把已经内嵌弹窗中的弹窗再放到外面
+        if (
+          definition.$$originId &&
+          modals.find(item => item.$$id === definition.$$originId)
+        ) {
+          return;
+        }
+
+        modals.unshift({
+          ...definition,
+          $$ref: key
+        });
+      }
+    });
+
+  // 子弹窗时，自己就是个弹窗
+  if (['dialog', 'drawer', 'confirmDialog'].includes(schema.type)) {
+    const idx = modals.findIndex(item => item.$$id === schema.$$id);
+    if (~idx) {
+      modals.splice(idx, 1);
+    }
+
+    modals.unshift({
+      ...schema,
+      // 如果还包含这个，子弹窗里面收集弹窗的时候会出现多份内嵌弹窗
+      definitions: undefined
+    });
+  }
+  return modals;
+}
+
+/**
+ * 深度 splice 数组，同时返回新的对象，按需拷贝，没有副作用
+ * @param target
+ * @param path
+ * @param numberToDelete
+ * @param items
+ * @returns
+ */
+export function deepSplice(
+  target: any,
+  path: string,
+  numberToDelete: number,
+  ...items: any[]
+) {
+  const paths = path.split('.');
+  const last = paths.pop()!;
+  let host = target;
+  const stack: Array<{
+    host: any;
+    key: string | number | undefined;
+  }> = [];
+  for (let i = 0; i < paths.length; i++) {
+    stack.unshift({
+      key: paths[i]!,
+      host: host
+    });
+    host = host[paths[i]];
+  }
+
+  if (!Array.isArray(host)) {
+    throw new Error('deepSplice: target is not an array');
+  }
+  host = host.concat();
+  host.splice.apply(host, [last, numberToDelete].concat(items));
+
+  return stack.reduce((prefix, {host, key}) => {
+    host = Array.isArray(host) ? host.concat() : {...host};
+    host[key!] = prefix;
+
+    return host;
+  }, host);
 }
 
 export const RAW_TYPE_MAP: {

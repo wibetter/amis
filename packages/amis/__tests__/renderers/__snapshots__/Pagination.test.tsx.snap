@@ -123,7 +123,7 @@ exports[`Renderer:Pagination 1`] = `
                       class="cxd-TableCell--title"
                     >
                       <span
-                        class="cxd-TplField"
+                        class="cxd-TplField fr-view"
                       >
                         <span>
                           Engine
@@ -143,7 +143,7 @@ exports[`Renderer:Pagination 1`] = `
                       class="cxd-TableCell--title"
                     >
                       <span
-                        class="cxd-TplField"
+                        class="cxd-TplField fr-view"
                       >
                         <span>
                           Version
@@ -861,9 +861,9 @@ exports[`Renderer:Pagination with showPerPage & perPageAvailable & showPageInput
     />
   </span>
   <div
-    class="cxd-PopOver cxd-Select-popover cxd-PopOver--leftBottomLeftTop cxd-PopOver--v-top"
+    class="cxd-PopOver cxd-Select-popover"
     role="popover"
-    style="display: block; width: auto; left: 0px; top: 0px;"
+    style="display: block; width: auto; left: 0px; top: 0px; visibility: hidden;"
     theme="cxd"
   >
     <div
@@ -963,21 +963,11 @@ exports[`Renderer:Pagination with simple mode 1`] = `
             />
           </span>
         </li>
-        <li
-          class="cxd-Pagination-simplego"
+        <span
+          class="Pagination-simple-number"
         >
-          <input
-            class="cxd-Pagination-simplego-input"
-            type="text"
-            value="1"
-          />
-          /
-          <span
-            class="cxd-Pagination-simplego-right"
-          >
-            1
-          </span>
-        </li>
+          1
+        </span>
         <li
           class="cxd-Pagination-next is-disabled"
         >

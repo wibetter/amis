@@ -3,6 +3,8 @@ import hoistNonReactStatic from 'hoist-non-react-statics';
 import {IFormItemStore, IFormStore} from '../store/form';
 import {reaction} from 'mobx';
 import {isAlive} from 'mobx-state-tree';
+import {isGlobalVarExpression} from '../globalVar';
+import {resolveVariableAndFilter} from '../utils/resolveVariableAndFilter';
 
 import {
   renderersMap,
@@ -27,6 +29,7 @@ import {
   BaseApiObject,
   BaseSchemaWithoutType,
   ClassName,
+  DataChangeReason,
   Schema
 } from '../types';
 import {HocStoreFactory} from '../WithStore';
@@ -480,6 +483,7 @@ export interface FormItemBasicConfig extends Partial<RendererConfig> {
   renderDescription?: boolean;
   test?: RegExp | TestFunc;
   storeType?: string;
+  formItemStoreType?: string;
   validations?: string;
   strictMode?: boolean;
 
@@ -530,7 +534,8 @@ export interface FormItemProps extends RendererProps {
   ) => void;
   onBulkChange?: (
     values: {[propName: string]: any},
-    submitOnChange?: boolean
+    submitOnChange?: boolean,
+    changeReason?: DataChangeReason
   ) => void;
   addHook: (
     fn: Function,
@@ -858,8 +863,7 @@ export class FormItemWrap extends React.Component<FormItemProps> {
             this.applyMapping(
               autoFill?.fillMapping ?? {'&': '$$'},
               result,
-              false,
-              true
+              false
             );
           }
         }
@@ -929,12 +933,7 @@ export class FormItemWrap extends React.Component<FormItemProps> {
    * @param ctx 上下文对象，类型为任意类型
    * @param skipIfExits 是否跳过已存在的属性，默认为 false
    */
-  applyMapping(
-    mapping: any,
-    ctx: any,
-    skipIfExits = false,
-    ignoreSelf = false
-  ) {
+  applyMapping(mapping: any, ctx: any, skipIfExits = false) {
     const {onBulkChange, data, formItem} = this.props;
     const toSync = dataMapping(mapping, ctx);
 
@@ -969,9 +968,9 @@ export class FormItemWrap extends React.Component<FormItemProps> {
     });
 
     // 是否忽略自己的设置
-    if (ignoreSelf && formItem?.name) {
-      deleteVariable(result, formItem.name);
-    }
+    // if (ignoreSelf && formItem?.name) {
+    //   deleteVariable(result, formItem.name);
+    // }
 
     onBulkChange!(result);
   }
@@ -1270,6 +1269,7 @@ export class FormItemWrap extends React.Component<FormItemProps> {
       return (
         <div
           data-role="form-item"
+          data-amis-name={props.name}
           className={cx(
             `Form-item Form-item--horizontal`,
             isStatic && staticClassName ? staticClassName : className,
@@ -1425,6 +1425,7 @@ export class FormItemWrap extends React.Component<FormItemProps> {
       return (
         <div
           data-role="form-item"
+          data-amis-name={props.name}
           className={cx(
             `Form-item Form-item--normal`,
             isStatic && staticClassName ? staticClassName : className,
@@ -1612,6 +1613,7 @@ export class FormItemWrap extends React.Component<FormItemProps> {
       return (
         <div
           data-role="form-item"
+          data-amis-name={props.name}
           className={cx(
             `Form-item Form-item--inline`,
             isStatic && staticClassName ? staticClassName : className,
@@ -1746,6 +1748,7 @@ export class FormItemWrap extends React.Component<FormItemProps> {
       return (
         <div
           data-role="form-item"
+          data-amis-name={props.name}
           className={cx(
             `Form-item Form-item--row`,
             isStatic && staticClassName ? staticClassName : className,
@@ -1881,10 +1884,10 @@ export class FormItemWrap extends React.Component<FormItemProps> {
         props.formLabelAlign;
       const labelWidth = props.labelWidth || props.formLabelWidth;
       description = description || desc;
-
       return (
         <div
           data-role="form-item"
+          data-amis-name={props.name}
           className={cx(
             `Form-item Form-item--flex`,
             isStatic && staticClassName ? staticClassName : className,
@@ -2205,6 +2208,7 @@ export function asFormItem(config: Omit<FormItemConfig, 'component'>) {
     }
 
     return wrapControl(
+      config,
       hoistNonReactStatic(
         class extends FormItemWrap {
           static defaultProps: any = {

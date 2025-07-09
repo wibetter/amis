@@ -104,6 +104,28 @@ export const EditorNode = types
         return resolved;
       },
 
+      getNodeByComponentId(id: string) {
+        let pool = self.children.concat();
+        let resolved: any = undefined;
+
+        while (pool.length) {
+          const item = pool.shift();
+          const schema = item.schema;
+
+          if (schema && schema.id === id) {
+            resolved = item;
+            break;
+          }
+
+          // 将当前节点的子节点全部放置到 pool中
+          if (item.children.length) {
+            pool.push.apply(pool, item.uniqueChildren);
+          }
+        }
+
+        return resolved;
+      },
+
       setInfo(value: RendererInfo) {
         info = value;
       },
@@ -676,7 +698,8 @@ export const EditorNode = types
       patch(
         store: any,
         force = false,
-        setPatchInfo?: (id: string, value: any) => void
+        setPatchInfo?: (id: string, value: any) => void,
+        ids?: Map<string, string>
       ) {
         // 避免重复 patch
         if (self.patched && !force) {
@@ -695,6 +718,11 @@ export const EditorNode = types
         let patched = schema;
 
         if (!patched?.id) {
+          patched = {...patched, id: 'u:' + guid()};
+        }
+
+        // id重复了，重新生成一个
+        if (ids?.has(patched.id) && ids?.get(patched.id) !== self.schemaPath) {
           patched = {...patched, id: 'u:' + guid()};
         }
 

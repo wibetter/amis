@@ -1,6 +1,6 @@
 import omit from 'lodash/omit';
 import {RendererProps} from '../factory';
-import {ConditionGroupValue, Api, SchemaNode} from '../types';
+import {ConditionGroupValue} from '../types';
 import {createObject} from '../utils/helper';
 import {RendererEvent} from '../utils/renderer-event';
 import {evalExpressionWithConditionBuilderAsync} from '../utils/tpl';
@@ -10,6 +10,8 @@ import {IContinueAction} from './ContinueAction';
 import {ILoopAction} from './LoopAction';
 import {IParallelAction} from './ParallelAction';
 import {ISwitchAction} from './SwitchAction';
+import {debug} from '../utils/debug';
+import {injectObjectChain} from '../utils';
 
 // 循环动作执行状态
 export enum LoopStatus {
@@ -69,6 +71,10 @@ export interface RendererAction {
 
 // 存储 Action 和类型的映射关系，用于后续查找
 const ActionTypeMap: {[key: string]: RendererAction} = {};
+// 存储动作属性排除列表
+const ActionIgnoreKey: MappingIgnoreMap = {};
+// 存储组件专有动作的属性排除列表
+const CmptIgnoreMap: MappingIgnoreMap = {};
 
 // 注册 Action
 export const registerAction = (type: string, action: RendererAction) => {
@@ -148,6 +154,23 @@ const getOmitActionProp = (type: string) => {
   return omitList;
 };
 
+export const getTargetComponent = (
+  action: ListenerAction,
+  renderer: ListenerContext,
+  event: RendererEvent<any>,
+  key?: string
+) => {
+  let targetComponent = renderer;
+  if (key && event.context.scoped) {
+    const func = action.componentId ? 'getComponentById' : 'getComponentByName';
+    if (typeof event.context.scoped[func] === 'function') {
+      targetComponent = event.context.scoped[func](key);
+    }
+  }
+
+  return targetComponent;
+};
+
 export const runActions = async (
   actions: ListenerAction | ListenerAction[],
   renderer: ListenerContext,
@@ -193,11 +216,20 @@ export const runActions = async (
     } catch (e) {
       const ignore = actionConfig.ignoreError ?? false;
       if (!ignore) {
-        throw Error(
+        // 通过标记 stop 来阻止后续动作执行
+        // 不要抛出，避免后续的代码逻辑不执行，同时避免 unhandled promise rejection
+        event.stopPropagation();
+        event.preventDefault();
+        console.error(
           `${actionConfig.actionType} 动作执行失败，原因：${
             e.message || '未知'
           }`
         );
+        // throw Error(
+        //   `${actionConfig.actionType} 动作执行失败，原因：${
+        //     e.message || '未知'
+        //   }`
+        // );
       }
     }
 
@@ -234,15 +266,16 @@ export const runAction = async (
   // 用户可能，需要用到事件数据和当前域的数据，因此merge事件数据和当前渲染器数据
   // 需要保持渲染器数据链完整
   // 注意：并行ajax请求结果必须通过event取值
-  const mergeData = createObject(
-    createObject(
-      rendererProto.__super
-        ? createObject(rendererProto.__super, additional)
-        : additional,
-      rendererProto
-    ),
-    event.data
-  );
+  const mergeData = injectObjectChain(event.data, additional);
+  // createObject(
+  //   createObject(
+  //     rendererProto.__super
+  //       ? createObject(rendererProto.__super, additional)
+  //       : additional,
+  //     rendererProto
+  //   ),
+  //   event.data
+  // );
   // 兼容一下1.9.0之前的版本
   const expression = action.expression ?? action.execOn;
   // 执行条件
@@ -292,30 +325,14 @@ export const runAction = async (
     delete action.args?.messages;
   }
   const cmptFlag = key.componentId || key.componentName;
-  let targetComponent = cmptFlag
-    ? event.context.scoped?.[
-        action.componentId ? 'getComponentById' : 'getComponentByName'
-      ](cmptFlag)
-    : renderer;
+  const targetComponent = getTargetComponent(action, renderer, event, cmptFlag);
   // 动作配置
   const args = dataMapping(action.args, mergeData, (key: string) => {
-    const actionIgnoreKey: MappingIgnoreMap = {
-      ajax: ['adaptor', 'responseAdaptor', 'requestAdaptor', 'responseData']
-    };
-    const cmptIgnoreMap: MappingIgnoreMap = {
-      'input-table': ['condition'],
-      'table': ['condition'],
-      'table2': ['condition'],
-      'crud': ['condition'],
-      'combo': ['condition'],
-      'list': ['condition'],
-      'cards': ['condition']
-    };
     const curCmptType: string = targetComponent?.props?.type;
     const curActionType: string = action.actionType;
     const ignoreKey = [
-      ...(actionIgnoreKey[curActionType] || []),
-      ...(cmptIgnoreMap[curCmptType] || [])
+      ...(ActionIgnoreKey[curActionType] || []),
+      ...(CmptIgnoreMap[curCmptType] || [])
     ];
     return ignoreKey.includes(key);
   });
@@ -343,38 +360,108 @@ export const runAction = async (
   console.group?.(`run action ${action.actionType}`);
   console.debug(`[${action.actionType}] action args, data`, args, data);
 
-  let stopped = false;
-  const actionResult = await actionInstrance.run(
-    {
-      ...action,
-      args,
-      rawData: actionConfig.data,
-      data: action.actionType === 'reload' ? actionData : data, // 如果是刷新动作，则只传action.data
-      ...key
-    },
-    renderer,
-    event,
-    mergeData
-  );
-  // 二次确认弹窗如果取消，则终止后续动作
-  if (action?.actionType === 'confirmDialog' && !actionResult) {
-    stopped = true;
-    preventDefault = true; // 这种对表单项change比较有意义，例如switch切换时弹确认弹窗，如果取消后不能把switch修改了
-  }
+  debug('action', `run action ${action.actionType} with args`, args);
+  debug('action', `run action ${action.actionType} with data`, data);
 
-  let stopPropagation = false;
-  if (action.stopPropagation) {
-    stopPropagation = await evalExpressionWithConditionBuilderAsync(
-      action.stopPropagation,
-      mergeData,
-      false
+  try {
+    let stopped = false;
+    const actionResult = await actionInstrance.run(
+      {
+        ...action,
+        args,
+        rawData: actionConfig.data,
+        data: action.actionType === 'reload' ? actionData : data, // 如果是刷新动作，则只传action.data
+        ...key
+      },
+      renderer,
+      event,
+      mergeData
     );
-  }
-  console.debug(`[${action.actionType}] action end event`, event);
-  console.groupEnd?.();
+    // 二次确认弹窗如果取消，则终止后续动作
+    if (action?.actionType === 'confirmDialog' && !actionResult) {
+      stopped = true;
+      preventDefault = true; // 这种对表单项change比较有意义，例如switch切换时弹确认弹窗，如果取消后不能把switch修改了
+    }
 
-  // 阻止原有动作执行
-  preventDefault && event.preventDefault();
-  // 阻止后续动作执行
-  (stopPropagation || stopped) && event.stopPropagation();
+    let stopPropagation = false;
+    if (action.stopPropagation) {
+      stopPropagation = await evalExpressionWithConditionBuilderAsync(
+        action.stopPropagation,
+        mergeData,
+        false
+      );
+    }
+    // 阻止原有动作执行
+    preventDefault && event.preventDefault();
+    // 阻止后续动作执行
+    (stopPropagation || stopped) && event.stopPropagation();
+  } finally {
+    console.debug(`[${action.actionType}] action end event`, event);
+    console.groupEnd?.();
+  }
 };
+
+// 注册动作参数映射忽略键
+export const registerActionMappingIgnoreKey = (
+  actionType: string,
+  ignoreKey: string[],
+  replace: boolean = true
+) => {
+  if (replace) {
+    ActionIgnoreKey[actionType] = ignoreKey;
+    return;
+  }
+  ActionIgnoreKey[actionType] = [
+    ...(ActionIgnoreKey[actionType] || []),
+    ...ignoreKey
+  ];
+};
+
+// 注册多个动作参数映射忽略键
+export const registerActionMappingIgnoreMap = (
+  maps: MappingIgnoreMap,
+  replace: boolean = true
+) => {
+  Object.keys(maps).forEach(key => {
+    registerActionMappingIgnoreKey(key, maps[key], replace);
+  });
+};
+
+// 注册组件动作参数映射忽略键
+export const registerComponentActionMappingIgnoreKey = (
+  cmptType: string,
+  ignoreKey: string[],
+  replace: boolean = true
+) => {
+  if (replace) {
+    CmptIgnoreMap[cmptType] = ignoreKey;
+    return;
+  }
+  CmptIgnoreMap[cmptType] = [...(CmptIgnoreMap[cmptType] || []), ...ignoreKey];
+};
+
+// 注册多个组件动作参数映射忽略键
+export const registerComponentActionMappingIgnoreMap = (
+  maps: MappingIgnoreMap,
+  replace: boolean = true
+) => {
+  Object.keys(maps).forEach(key => {
+    registerComponentActionMappingIgnoreKey(key, maps[key], replace);
+  });
+};
+
+// 注册默认忽略键（将来是否需要移到相应的模块中）
+registerActionMappingIgnoreMap({
+  ajax: ['adaptor', 'responseAdaptor', 'requestAdaptor', 'responseData']
+});
+
+// 注册组件默认忽略键（将来是否需要移到相应的渲染器中）
+registerComponentActionMappingIgnoreMap({
+  'input-table': ['condition'],
+  'table': ['condition'],
+  'table2': ['condition'],
+  'crud': ['condition'],
+  'combo': ['condition'],
+  'list': ['condition'],
+  'cards': ['condition']
+});

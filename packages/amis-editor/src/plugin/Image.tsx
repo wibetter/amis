@@ -14,9 +14,11 @@ import {
 import {defaultValue, getSchemaTpl, tipedLabel} from 'amis-editor-core';
 import {mockValue} from 'amis-editor-core';
 import {
+  buildLinkActionDesc,
   getArgsWrapper,
   getEventControlConfig
 } from '../renderer/event-control/helper';
+import React from 'react';
 
 export class ImagePlugin extends BasePlugin {
   static id = 'ImagePlugin';
@@ -119,12 +121,29 @@ export class ImagePlugin extends BasePlugin {
     {
       actionType: 'preview',
       actionLabel: '预览',
-      description: '预览图片'
+      description: '预览图片',
+      descDetail: (info: any, context: any, props: any) => {
+        return (
+          <div className="action-desc">
+            预览
+            {buildLinkActionDesc(props.manager, info)}
+          </div>
+        );
+      }
     },
     {
       actionType: 'zoom',
       actionLabel: '调整图片比例',
       description: '将图片等比例放大或缩小',
+      descDetail: (info: any, context: any, props: any) => {
+        return (
+          <div className="action-desc">
+            调整
+            {buildLinkActionDesc(props.manager, info)}
+            图片比例
+          </div>
+        );
+      },
       schema: {
         type: 'container',
         body: [
@@ -187,35 +206,6 @@ export class ImagePlugin extends BasePlugin {
                   }
                 ]
               },
-              {
-                name: 'width',
-                label: '宽度',
-                type: 'input-number',
-                onChange: (value: any) => {
-                  const node = context.node;
-                  node.updateState({
-                    width: value
-                  });
-                  requestAnimationFrame(() => {
-                    node.calculateHighlightBox();
-                  });
-                }
-              },
-              {
-                name: 'height',
-                label: '高度',
-                type: 'input-number',
-                onChange: (value: any) => {
-                  const node = context.node;
-                  node.updateState({
-                    height: value
-                  });
-                  requestAnimationFrame(() => {
-                    node.calculateHighlightBox();
-                  });
-                }
-              },
-
               isUnderField
                 ? null
                 : getSchemaTpl('imageUrl', {
@@ -341,7 +331,7 @@ export class ImagePlugin extends BasePlugin {
 
               getSchemaTpl('theme:size', {
                 label: '尺寸',
-                name: 'themeCss.imageControlClassName.size:default'
+                name: 'themeCss.imageContentClassName.size:default'
               })
             ]
           },
@@ -372,24 +362,21 @@ export class ImagePlugin extends BasePlugin {
                 name: 'themeCss.desControlClassName.padding-and-margin',
                 editorValueToken: '--image-image-description'
               }),
-              {
+              getSchemaTpl('icon', {
                 name: 'themeCss.iconControlClassName.--image-image-normal-icon',
                 label: '放大图标',
-                type: 'icon-select',
                 returnSvg: true
-              },
-              {
+              }),
+              getSchemaTpl('icon', {
                 name: 'themeCss.galleryControlClassName.--image-images-prev-icon',
                 label: '左切换图标',
-                type: 'icon-select',
                 returnSvg: true
-              },
-              {
+              }),
+              getSchemaTpl('icon', {
                 name: 'themeCss.galleryControlClassName.--image-images-next-icon',
                 label: '右切换图标',
-                type: 'icon-select',
                 returnSvg: true
-              },
+              }),
               getSchemaTpl('theme:select', {
                 label: '切换图标大小',
                 name: 'themeCss.galleryControlClassName.--image-images-item-size'

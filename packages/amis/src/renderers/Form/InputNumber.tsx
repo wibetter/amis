@@ -18,6 +18,7 @@ import {
   autobind,
   createObject,
   numberFormatter,
+  numberReverter,
   safeSub,
   normalizeOptions,
   Option,
@@ -275,6 +276,7 @@ export default class NumberControl extends React.Component<
       // 大数下不需要进行精度处理，因为是字符串
       big !== true
     ) {
+      // 精度处理，遵循四舍五入的处理规则
       const normalizedValue = parseFloat(
         toFixed(value.toString(), '.', normalizedPrecision)
       );
@@ -484,7 +486,8 @@ export default class NumberControl extends React.Component<
       env,
       name,
       showAsPercent,
-      testIdBuilder
+      testIdBuilder,
+      popOverContainer
     } = this.props;
     const {unit} = this.state;
     const finalPrecision = this.filterNum(precision);
@@ -497,8 +500,11 @@ export default class NumberControl extends React.Component<
           ) => {
             // 增加千分分隔
             if (kilobitSeparator && value) {
-              if (userTyping) {
-                // 如果是用户输入状态，则只进行千分隔处理，避免光标乱跳
+              if (
+                (userTyping || this.input === document.activeElement) &&
+                numberReverter(value) === numberReverter(this.input?.value)
+              ) {
+                // 如果是用户输入状态，且value与输入框内值相同，则只进行千分隔处理，避免光标乱跳
                 let parts = value.toString().split('.');
                 parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
                 value = parts.join('.');
@@ -507,6 +513,14 @@ export default class NumberControl extends React.Component<
                 value = numberFormatter(value, finalPrecision);
               }
             }
+            if (
+              suffix &&
+              userTyping &&
+              this.input?.selectionStart === input.length
+            ) {
+              return `${prefix || ''}${value}`;
+            }
+
             return `${prefix || ''}${value}${suffix || ''}`;
           }
         : undefined;
@@ -590,6 +604,7 @@ export default class NumberControl extends React.Component<
               onChange={this.handleChangeUnit}
               className={`${ns}NumberControl-unit`}
               disabled={disabled}
+              popOverContainer={popOverContainer}
             />
           ) : (
             <div

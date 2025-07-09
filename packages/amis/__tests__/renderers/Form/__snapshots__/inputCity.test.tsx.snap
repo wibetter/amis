@@ -17,6 +17,7 @@ exports[`Renderer:inputCity 1`] = `
         >
           <div
             class="cxd-Panel cxd-Panel--default cxd-Panel--form"
+            data-role="container"
           >
             <div
               class="cxd-Panel-heading"
@@ -25,7 +26,7 @@ exports[`Renderer:inputCity 1`] = `
                 class="cxd-Panel-title"
               >
                 <span
-                  class="cxd-TplField"
+                  class="cxd-TplField fr-view"
                 >
                   <span>
                     表单
@@ -46,6 +47,7 @@ exports[`Renderer:inputCity 1`] = `
                 />
                 <div
                   class="cxd-Form-item cxd-Form-item--horizontal"
+                  data-amis-name="city"
                   data-role="form-item"
                 >
                   <label
@@ -53,7 +55,7 @@ exports[`Renderer:inputCity 1`] = `
                   >
                     <span>
                       <span
-                        class="cxd-TplField"
+                        class="cxd-TplField fr-view"
                       >
                         <span>
                           城市
@@ -212,6 +214,7 @@ exports[`Renderer:inputCity with searchable: open select 1`] = `
         >
           <div
             class="cxd-Panel cxd-Panel--default cxd-Panel--form"
+            data-role="container"
           >
             <div
               class="cxd-Panel-heading"
@@ -220,7 +223,7 @@ exports[`Renderer:inputCity with searchable: open select 1`] = `
                 class="cxd-Panel-title"
               >
                 <span
-                  class="cxd-TplField"
+                  class="cxd-TplField fr-view"
                 >
                   <span>
                     表单
@@ -241,6 +244,7 @@ exports[`Renderer:inputCity with searchable: open select 1`] = `
                 />
                 <div
                   class="cxd-Form-item cxd-Form-item--horizontal"
+                  data-amis-name="city"
                   data-role="form-item"
                 >
                   <label
@@ -248,7 +252,7 @@ exports[`Renderer:inputCity with searchable: open select 1`] = `
                   >
                     <span>
                       <span
-                        class="cxd-TplField"
+                        class="cxd-TplField fr-view"
                       >
                         <span>
                           城市
@@ -288,9 +292,9 @@ exports[`Renderer:inputCity with searchable: open select 1`] = `
                           />
                         </span>
                         <div
-                          class="cxd-PopOver cxd-Select-popover cxd-PopOver--leftBottomLeftTop cxd-PopOver--v-top"
+                          class="cxd-PopOver cxd-Select-popover"
                           role="popover"
-                          style="display: block; width: auto; left: 0px; top: 0px;"
+                          style="display: block; width: auto; left: 0px; top: 0px; visibility: hidden;"
                           theme="cxd"
                         >
                           <div

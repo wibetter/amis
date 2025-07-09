@@ -29,7 +29,8 @@ import {
   isObject,
   eachTree,
   everyTree,
-  findTreeIndex
+  findTreeIndex,
+  applyFilters
 } from 'amis-core';
 import {Button, Icon} from 'amis-ui';
 import omit from 'lodash/omit';
@@ -39,6 +40,7 @@ import {SchemaApi, SchemaCollection, SchemaClassName} from '../../Schema';
 import find from 'lodash/find';
 import debounce from 'lodash/debounce';
 import moment from 'moment';
+import {sortArray, str2function} from 'amis-core';
 
 import type {SchemaTokenizeableString} from '../../Schema';
 
@@ -249,6 +251,21 @@ export interface TableControlSchema
    * 底部工具栏CSS样式类
    */
   toolbarClassName?: SchemaClassName;
+
+  /**
+   * 自定义搜索匹配函数，当存在列的 searchable 为 true 时，会基于该函数计算的匹配结果进行过滤，主要用于处理列字段类型较为复杂或者字段值格式和后端返回不一致的场景
+   *
+   * 参数说明
+   *
+   *  * `items` 当前表格数据
+   *  * `itemsRaw` 当前表格数据（未处理）
+   *  * `options` 配置
+   *  * `options.query` 查询条件
+   *  * `options.columns` 列配置
+   *  * `options.matchSorter` 系统默认的排序方法
+   * @since 6.10.0
+   */
+  matchFunc?: string | any;
 }
 
 export interface TableProps
@@ -260,10 +277,14 @@ export interface TableProps
 
 export interface TableState {
   items: Array<TableDataItem>;
+  filteredItems: Array<TableDataItem>;
   columns: Array<any>;
   editIndex: string;
+  rowIndex?: string;
   isCreateMode?: boolean;
   page?: number;
+  total?: number;
+  query?: any;
   lastModifiedRow?: {
     index: string;
     data: Record<string, any>;
@@ -285,7 +306,9 @@ export type FormTableRendererEvent =
 
 export type FormTableRendererAction = 'add' | 'delete' | 'reset' | 'clear';
 
-export default class FormTable extends React.Component<TableProps, TableState> {
+export default class FormTable<
+  T extends TableProps = TableProps
+> extends React.Component<T, TableState> {
   static defaultProps = {
     placeholder: 'placeholder.empty',
     scaffold: {},
@@ -338,14 +361,16 @@ export default class FormTable extends React.Component<TableProps, TableState> {
     leading: false
   });
 
-  constructor(props: TableProps) {
+  constructor(props: T) {
     super(props);
     const {addHook} = props;
+    const items = Array.isArray(props.value) ? props.value.concat() : [];
 
     this.state = {
       columns: this.buildColumns(props),
       editIndex: '',
-      items: Array.isArray(props.value) ? props.value.concat() : []
+      items: items,
+      ...this.transformState(items)
     };
 
     this.entries = new SimpleMap();
@@ -359,9 +384,11 @@ export default class FormTable extends React.Component<TableProps, TableState> {
     this.subFormRef = this.subFormRef.bind(this);
     this.subFormItemRef = this.subFormItemRef.bind(this);
     this.handlePageChange = this.handlePageChange.bind(this);
+    this.handleTableQuery = this.handleTableQuery.bind(this);
     this.emitValue = this.emitValue.bind(this);
     this.tableRef = this.tableRef.bind(this);
     this.flush = this.flush.bind(this);
+    this.filterItemIndex = this.filterItemIndex.bind(this);
 
     if (addHook) {
       this.toDispose.push(addHook(this.flush, 'flush'));
@@ -387,6 +414,7 @@ export default class FormTable extends React.Component<TableProps, TableState> {
       toUpdate = {
         ...toUpdate,
         items,
+        ...this.transformState(items),
         editIndex: '',
         columns: this.buildColumns(props)
       };
@@ -400,9 +428,11 @@ export default class FormTable extends React.Component<TableProps, TableState> {
     }
 
     if (props.value !== prevProps.value && props.value !== this.emittedValue) {
+      const items = Array.isArray(props.value) ? props.value.concat() : [];
       toUpdate = {
         ...toUpdate,
-        items: Array.isArray(props.value) ? props.value.concat() : [],
+        items: items,
+        ...this.transformState(items),
         editIndex: ''
       };
     }
@@ -415,6 +445,63 @@ export default class FormTable extends React.Component<TableProps, TableState> {
     this.lazyEmitValue.cancel();
     this.toDispose.forEach(fn => fn());
     this.toDispose = [];
+  }
+
+  transformState(
+    items: Array<TableDataItem>,
+    state?: Partial<TableState>,
+    activeRow?: TableDataItem
+  ): Pick<TableState, 'filteredItems' | 'total' | 'page'> {
+    const {perPage, matchFunc} = this.props;
+    let {query, page} = {...this.state, ...state};
+    const {orderBy, orderDir, ...rest} = query ?? {};
+
+    const fields = Object.keys(rest);
+    if (fields.length) {
+      // apply filters
+      items = applyFilters(items, {
+        query: rest,
+        columns: this.state.columns,
+        matchFunc:
+          typeof matchFunc === 'string' && matchFunc
+            ? str2function(matchFunc, 'items', 'itemsRaw', 'options')
+            : typeof matchFunc === 'function'
+            ? matchFunc
+            : undefined
+      });
+    }
+
+    if (orderBy) {
+      items = sortArray(
+        items.concat(),
+        orderBy,
+        typeof orderDir === 'string' && /desc/i.test(orderDir) ? -1 : 1
+      );
+    }
+
+    let total = items.length;
+
+    page = Math.min(
+      page ?? 1,
+      typeof perPage === 'number' ? Math.max(1, Math.ceil(total / perPage)) : 1
+    );
+
+    if (activeRow) {
+      const index = items.indexOf(activeRow);
+      if (~index) {
+        page = Math.ceil((index + 1) / perPage!);
+      }
+    }
+
+    if (typeof perPage === 'number' && perPage && items.length > perPage) {
+      items = items.slice((page - 1) * perPage, page * perPage);
+    }
+
+    return {
+      filteredItems: items,
+      page,
+      total
+    };
   }
 
   async flush() {
@@ -622,7 +709,8 @@ export default class FormTable extends React.Component<TableProps, TableState> {
 
         this.setState(
           {
-            items
+            items,
+            ...this.transformState(items)
           },
           () => {
             if (toAdd.length === 1 && needConfirm !== false) {
@@ -661,7 +749,8 @@ export default class FormTable extends React.Component<TableProps, TableState> {
 
       this.setState(
         {
-          items
+          items,
+          ...this.transformState(items)
         },
         () => {
           onChange?.(items);
@@ -698,28 +787,37 @@ export default class FormTable extends React.Component<TableProps, TableState> {
       });
     }
     this.reUseRowId(items, originItems, next);
+    const newRow = items[next[0]];
+    const toUpdate = {
+      ...this.transformState(items),
+      items
+    };
 
-    this.setState(
-      {
-        items
-      },
-      async () => {
-        // 派发add事件
-        const isPrevented = await this.dispatchEvent('add', {
-          index: next[next.length - 1],
-          indexPath: next.join('.'),
-          item: item
-        });
-        if (isPrevented) {
-          return;
-        }
-        if (needConfirm === false) {
-          this.emitValue();
-        } else {
-          this.startEdit(next.join('.'), true);
-        }
+    if (!toUpdate.filteredItems.includes(newRow)) {
+      // 如果新插入的待编辑的行不在过滤后的列表中，则需要更新过滤后的列表
+      const insertAfter = items[indexes[0]];
+      const idx = toUpdate.filteredItems.findIndex(
+        (a: any) => a === insertAfter
+      );
+      toUpdate.filteredItems.splice(idx + 1, 0, newRow);
+    }
+
+    this.setState(toUpdate, async () => {
+      // 派发add事件
+      const isPrevented = await this.dispatchEvent('add', {
+        index: next[next.length - 1],
+        indexPath: next.join('.'),
+        item: item
+      });
+      if (isPrevented) {
+        return;
       }
-    );
+      if (needConfirm === false) {
+        this.emitValue();
+      } else {
+        this.startEdit(next.join('.'), true);
+      }
+    });
   }
 
   async addItem(
@@ -728,7 +826,7 @@ export default class FormTable extends React.Component<TableProps, TableState> {
     callback?: () => void
   ) {
     index = index || `${this.state.items.length - 1}`;
-    const {needConfirm, scaffold, columns, data} = this.props;
+    const {needConfirm, scaffold, columns, data, perPage} = this.props;
     let items = this.state.items.concat();
     let value: TableDataItem = {
       [PLACE_HOLDER]: true
@@ -787,40 +885,50 @@ export default class FormTable extends React.Component<TableProps, TableState> {
     let originHost = items;
     items = spliceTree(items, next, 0, value);
     this.reUseRowId(items, originHost, next);
+    const newRow = items[next[0]];
 
-    this.setState(
-      {
-        items,
-        // 需要一起修改，state 不能分批次 setState
-        // 因为第一步添加成员，单元格的表单项如果有默认值就会触发 onChange
-        // 然后 handleTableSave 里面就会执行，因为没有 editIndex 会以为是批量更新 state 后 emitValue
-        // 而 emitValue 又会干掉 __isPlaceholder 后 onChange 出去一个新数组，空数组
-        // 然后 didUpdate 里面检测到上层 value 变化了，又重置 state，导致新增无效
-        // 所以这里直接让 items 和 editIndex 一起调整，这样 handleTableSave 发现有 editIndex 会走不同逻辑，不会触发 emitValue
-        ...((needConfirm === false
-          ? {}
-          : {
-              editIndex: next.join('.'),
-              isCreateMode: true,
-              columns: this.buildColumns(this.props, true, `${index}`)
-            }) as any)
-      },
-      async () => {
-        if (isDispatch) {
-          // todo: add 无法阻止, state 状态也要还原
-          await this.dispatchEvent('add', {
-            index: next[next.length - 1],
-            indexPath: next.join('.'),
-            item: value
-          });
-        }
-        if (needConfirm === false) {
-          this.emitValue();
-        }
+    const toUpdate = {
+      items,
+      ...this.transformState(items, undefined, newRow),
+      // 需要一起修改，state 不能分批次 setState
+      // 因为第一步添加成员，单元格的表单项如果有默认值就会触发 onChange
+      // 然后 handleTableSave 里面就会执行，因为没有 editIndex 会以为是批量更新 state 后 emitValue
+      // 而 emitValue 又会干掉 __isPlaceholder 后 onChange 出去一个新数组，空数组
+      // 然后 didUpdate 里面检测到上层 value 变化了，又重置 state，导致新增无效
+      // 所以这里直接让 items 和 editIndex 一起调整，这样 handleTableSave 发现有 editIndex 会走不同逻辑，不会触发 emitValue
+      ...((needConfirm === false
+        ? {}
+        : {
+            editIndex: next.join('.'),
+            isCreateMode: true,
+            columns: this.buildColumns(this.props, true, `${index}`)
+          }) as any)
+    };
 
-        callback?.();
+    if (!toUpdate.filteredItems.includes(newRow)) {
+      // 如果新插入的待编辑的行不在过滤后的列表中，则需要更新过滤后的列表
+      const insertAfter = items[indexes[0]];
+      const idx = toUpdate.filteredItems.findIndex(
+        (a: any) => a === insertAfter
+      );
+      toUpdate.filteredItems.splice(idx + 1, 0, newRow);
+    }
+
+    this.setState(toUpdate, async () => {
+      if (isDispatch) {
+        // todo: add 无法阻止, state 状态也要还原
+        await this.dispatchEvent('add', {
+          index: next[next.length - 1],
+          indexPath: next.join('.'),
+          item: value
+        });
       }
-    );
+      if (needConfirm === false) {
+        this.emitValue();
+      }
+
+      callback?.();
+    });
 
     // 阻止触发 onAction 动作
     // 因为 footerAddButton 的 onClick 也绑定了这个
@@ -861,11 +969,12 @@ export default class FormTable extends React.Component<TableProps, TableState> {
    */
   async dispatchEvent(eventName: string, eventData: any = {}) {
     const {dispatchEvent} = this.props;
-    const {items} = this.state;
+    const {items, rowIndex} = this.state;
     const rendererEvent = await dispatchEvent(
       eventName,
       resolveEventData(this.props, {
         value: [...items],
+        rowIndex,
         ...eventData
       })
     );
@@ -934,7 +1043,7 @@ export default class FormTable extends React.Component<TableProps, TableState> {
     if (isNew && isEffectiveApi(addApi, createObject(data, item))) {
       remote = await env.fetcher(addApi, createObject(data, item));
       apiMsg = (addApi as ApiObject)?.messages?.failed;
-    } else if (isEffectiveApi(updateApi, createObject(data, item))) {
+    } else if (!isNew && isEffectiveApi(updateApi, createObject(data, item))) {
       remote = await env.fetcher(updateApi, createObject(data, item));
       apiMsg = (updateApi as ApiObject)?.messages?.failed;
     }
@@ -969,6 +1078,7 @@ export default class FormTable extends React.Component<TableProps, TableState> {
       {
         editIndex: '',
         items: items,
+        ...this.transformState(items),
         columns: this.buildColumns(this.props)
       },
       async () => {
@@ -1020,6 +1130,7 @@ export default class FormTable extends React.Component<TableProps, TableState> {
       {
         editIndex: '',
         items: items,
+        ...this.transformState(items),
         columns: this.buildColumns(this.props),
         lastModifiedRow: undefined
       },
@@ -1071,7 +1182,8 @@ export default class FormTable extends React.Component<TableProps, TableState> {
         !(deleteApi as ApiObject)?.silent &&
           env.notify(
             'error',
-            (deleteApi as ApiObject)?.messages?.failed ?? __('deleteFailed')
+            (deleteApi as ApiObject)?.messages?.failed ??
+              (result.msg || __('deleteFailed'))
           );
         this.dispatchEvent('deleteFail', {
           index: indexes[indexes.length - 1],
@@ -1090,7 +1202,8 @@ export default class FormTable extends React.Component<TableProps, TableState> {
 
     this.setState(
       {
-        items: newValue
+        items: newValue,
+        ...this.transformState(newValue)
       },
       async () => {
         // change value
@@ -1109,9 +1222,14 @@ export default class FormTable extends React.Component<TableProps, TableState> {
     );
   }
 
-  rowPathPlusOffset(path: string, offset = 0) {
-    const list = path.split('.').map((item: any) => parseInt(item, 10));
-    list[0] += offset;
+  convertToRawPath(path: string, state?: Partial<TableState>) {
+    const {filteredItems, items} = {...this.state, ...state};
+    const list = `${path}`.split('.').map((item: any) => parseInt(item, 10));
+    const firstRow = filteredItems[list[0]];
+    list[0] = items.findIndex(item => item === firstRow);
+    if (list[0] === -1) {
+      return path;
+    }
     return list.join('.');
   }
 
@@ -1140,29 +1258,42 @@ export default class FormTable extends React.Component<TableProps, TableState> {
   }
 
   buildItemProps(item: any, index: number) {
+    const rowProps: any = {};
+
+    const minLength = this.resolveVariableProps(this.props, 'minLength');
+    const maxLength = this.resolveVariableProps(this.props, 'maxLength');
+
+    rowProps.inputTableCanAddItem = maxLength
+      ? maxLength > this.state.items.length
+      : true;
+    rowProps.inputTableCanRemoveItem = minLength
+      ? minLength < this.state.items.length
+      : true;
+
     if (this.props.needConfirm === false) {
-      return {
-        quickEditEnabled: true
-      };
+      rowProps.quickEditEnabled = true;
+      return rowProps;
     } else if (
+      !this.props.static &&
       !this.props.editable &&
       !this.props.addable &&
       !this.state.isCreateMode
     ) {
-      return null;
+      return rowProps;
     }
 
-    const perPage = this.props.perPage;
-    const page = this.state.page || 1;
-    let offset = 0;
-    if (typeof perPage === 'number' && perPage) {
-      offset = (page - 1) * perPage;
+    rowProps.quickEditEnabled =
+      this.state.editIndex === this.convertToRawPath(item.path);
+
+    /**
+     * 非编辑态使用静态展示
+     * 编辑态仅当前编辑行使用静态展示
+     */
+    if (this.props.enableStaticTransform && this.props.needConfirm !== false) {
+      rowProps.static = !rowProps.quickEditEnabled;
     }
 
-    return {
-      quickEditEnabled:
-        this.state.editIndex === this.rowPathPlusOffset(item.path, offset)
-    };
+    return rowProps;
   }
 
   buildColumns(
@@ -1170,16 +1301,13 @@ export default class FormTable extends React.Component<TableProps, TableState> {
     isCreateMode = false,
     editRowIndex?: string
   ): Array<any> {
-    const {env, enableStaticTransform, testIdBuilder} = this.props;
+    const {env, mobileUI, testIdBuilder} = this.props;
     let columns: Array<any> = Array.isArray(props.columns)
       ? props.columns.concat()
       : [];
     const ns = this.props.classPrefix;
     const __ = this.props.translate;
     const needConfirm = this.props.needConfirm;
-    const showIndex = this.props.showIndex;
-    const minLength = this.resolveVariableProps(this.props, 'minLength');
-    const maxLength = this.resolveVariableProps(this.props, 'maxLength');
     const isStatic = this.props.static;
     const disabled = this.props.disabled;
 
@@ -1188,17 +1316,16 @@ export default class FormTable extends React.Component<TableProps, TableState> {
       btns.push({
         children: ({
           key,
-          rowIndex,
           rowIndexPath,
-          offset
+          inputTableCanAddItem
         }: {
           key: any;
-          rowIndex: number;
           rowIndexPath: string;
-          offset: number;
+          inputTableCanAddItem: boolean;
+          inputTableCanRemoveItem: boolean;
         }) =>
           (this.state.editIndex && needConfirm !== false) ||
-          maxLength <= this.state.items.length ? null : (
+          !inputTableCanAddItem ? null : (
             <Button
               classPrefix={ns}
               size="sm"
@@ -1209,12 +1336,12 @@ export default class FormTable extends React.Component<TableProps, TableState> {
               disabled={disabled}
               onClick={this.addItem.bind(
                 this,
-                this.rowPathPlusOffset(rowIndexPath, offset),
+                this.convertToRawPath(rowIndexPath),
                 undefined,
                 undefined
               )}
               testIdBuilder={testIdBuilder?.getChild(
-                `addRow-${rowIndex + offset}`
+                `addRow-${this.convertToRawPath(rowIndexPath)}`
               )}
             >
               {props.addBtnIcon ? (
@@ -1234,15 +1361,11 @@ export default class FormTable extends React.Component<TableProps, TableState> {
       btns.push({
         children: ({
           key,
-          rowIndex,
           rowIndexPath,
-          offset,
           row
         }: {
           key: any;
-          rowIndex: number;
           rowIndexPath: string;
-          offset: number;
           row: any;
         }) =>
           this.state.editIndex && needConfirm !== false ? null : (
@@ -1256,12 +1379,12 @@ export default class FormTable extends React.Component<TableProps, TableState> {
               disabled={disabled}
               onClick={this.subAddItem.bind(
                 this,
-                this.rowPathPlusOffset(rowIndexPath, offset),
+                this.convertToRawPath(rowIndexPath),
                 undefined,
                 row
               )}
               testIdBuilder={testIdBuilder?.getChild(
-                `subAddRow-${rowIndex + offset}`
+                `subAddRow-${this.convertToRawPath(rowIndexPath)}`
               )}
             >
               {props.subAddBtnIcon ? (
@@ -1281,17 +1404,7 @@ export default class FormTable extends React.Component<TableProps, TableState> {
 
     if (!isStatic && props.copyable && props.showCopyBtn !== false) {
       btns.push({
-        children: ({
-          key,
-          rowIndex,
-          rowIndexPath,
-          offset
-        }: {
-          key: any;
-          rowIndex: number;
-          rowIndexPath: string;
-          offset: number;
-        }) =>
+        children: ({key, rowIndexPath}: {key: any; rowIndexPath: string}) =>
           this.state.editIndex && needConfirm !== false ? null : (
             <Button
               classPrefix={ns}
@@ -1303,11 +1416,11 @@ export default class FormTable extends React.Component<TableProps, TableState> {
               disabled={disabled}
               onClick={this.copyItem.bind(
                 this,
-                this.rowPathPlusOffset(rowIndexPath, offset),
+                this.convertToRawPath(rowIndexPath),
                 undefined
               )}
               testIdBuilder={testIdBuilder?.getChild(
-                `copyRow-${rowIndex + offset}`
+                `copyRow-${this.convertToRawPath(rowIndexPath)}`
               )}
             >
               {props.copyBtnIcon ? (
@@ -1380,14 +1493,7 @@ export default class FormTable extends React.Component<TableProps, TableState> {
                   mode: 'inline',
                   disabled
                 }
-              }),
-          /**
-           * 非编辑态使用静态展示
-           * 编辑态仅当前编辑行使用静态展示
-           */
-          ...(enableStaticTransform && props.needConfirm !== false
-            ? {staticOn: `${!isCreateMode} || data.index !== '${editRowIndex}'`}
-            : {})
+              })
         };
       });
 
@@ -1396,16 +1502,12 @@ export default class FormTable extends React.Component<TableProps, TableState> {
         btns.push({
           children: ({
             key,
-            rowIndex,
             rowIndexPath,
-            data,
-            offset
+            data
           }: {
             key: any;
-            rowIndex: number;
             rowIndexPath: string;
             data: any;
-            offset: number;
           }) =>
             this.state.editIndex ||
             (data && data.hasOwnProperty(PLACE_HOLDER)) ? null : (
@@ -1420,10 +1522,10 @@ export default class FormTable extends React.Component<TableProps, TableState> {
                 }
                 disabled={disabled}
                 onClick={() =>
-                  this.editItem(this.rowPathPlusOffset(rowIndexPath, offset))
+                  this.editItem(this.convertToRawPath(rowIndexPath))
                 }
                 testIdBuilder={testIdBuilder?.getChild(
-                  `editRow-${rowIndex + offset}`
+                  `editRow-${this.convertToRawPath(rowIndexPath)}`
                 )}
               >
                 {/* 兼容之前的写法 */}
@@ -1451,19 +1553,8 @@ export default class FormTable extends React.Component<TableProps, TableState> {
 
       !isStatic &&
         btns.push({
-          children: ({
-            key,
-            rowIndex,
-            rowIndexPath,
-            offset
-          }: {
-            key: any;
-            rowIndex: number;
-            rowIndexPath: string;
-            offset: number;
-          }) =>
-            this.state.editIndex ===
-            this.rowPathPlusOffset(rowIndexPath, offset) ? (
+          children: ({key, rowIndexPath}: {key: any; rowIndexPath: string}) =>
+            this.state.editIndex === this.convertToRawPath(rowIndexPath) ? (
               <Button
                 classPrefix={ns}
                 size="sm"
@@ -1475,7 +1566,7 @@ export default class FormTable extends React.Component<TableProps, TableState> {
                 }
                 onClick={this.confirmEdit}
                 testIdBuilder={testIdBuilder?.getChild(
-                  `confirmRow-${rowIndex + offset}`
+                  `confirmRow-${this.convertToRawPath(rowIndexPath)}`
                 )}
               >
                 {props.confirmBtnIcon ? (
@@ -1494,19 +1585,8 @@ export default class FormTable extends React.Component<TableProps, TableState> {
 
       !isStatic &&
         btns.push({
-          children: ({
-            key,
-            rowIndex,
-            rowIndexPath,
-            offset
-          }: {
-            key: any;
-            rowIndex: number;
-            rowIndexPath: string;
-            offset: number;
-          }) =>
-            this.state.editIndex ===
-            this.rowPathPlusOffset(rowIndexPath, offset) ? (
+          children: ({key, rowIndexPath}: {key: any; rowIndexPath: string}) =>
+            this.state.editIndex === this.convertToRawPath(rowIndexPath) ? (
               <Button
                 classPrefix={ns}
                 size="sm"
@@ -1518,7 +1598,7 @@ export default class FormTable extends React.Component<TableProps, TableState> {
                 }
                 onClick={this.cancelEdit}
                 testIdBuilder={testIdBuilder?.getChild(
-                  `cancelRow-${rowIndex + offset}`
+                  `cancelRow-${this.convertToRawPath(rowIndexPath)}`
                 )}
               >
                 {props.cancelBtnIcon ? (
@@ -1559,21 +1639,19 @@ export default class FormTable extends React.Component<TableProps, TableState> {
       btns.push({
         children: ({
           key,
-          rowIndex,
           rowIndexPath,
           data,
-          offset
+          inputTableCanRemoveItem
         }: {
           key: any;
-          rowIndex: number;
           rowIndexPath: string;
           data: any;
-          offset: number;
+          inputTableCanRemoveItem: boolean;
         }) =>
           ((this.state.editIndex ||
             (data && data.hasOwnProperty(PLACE_HOLDER))) &&
             needConfirm !== false) ||
-          minLength >= this.state.items.length ? null : (
+          !inputTableCanRemoveItem ? null : (
             <Button
               classPrefix={ns}
               size="sm"
@@ -1584,10 +1662,10 @@ export default class FormTable extends React.Component<TableProps, TableState> {
               disabled={disabled}
               onClick={this.removeItem.bind(
                 this,
-                this.rowPathPlusOffset(rowIndexPath, offset)
+                this.convertToRawPath(rowIndexPath)
               )}
               testIdBuilder={testIdBuilder?.getChild(
-                `delRow-${rowIndex + offset}`
+                `delRow-${this.convertToRawPath(rowIndexPath)}`
               )}
             >
               {props.deleteBtnIcon ? (
@@ -1606,19 +1684,25 @@ export default class FormTable extends React.Component<TableProps, TableState> {
     }
 
     if (btns.length) {
-      let operation = columns.find(item => item.type === 'operation');
+      let idx = columns.findIndex(item => item.type === 'operation');
+      let operation = columns[idx];
 
-      if (!operation) {
+      if (idx === -1) {
         operation = {
           type: 'operation',
           buttons: [],
           label: __('Table.operation'),
           className: 'v-middle nowrap',
-          fixed: 'right',
+          fixed: mobileUI ? '' : 'right', // 移动端不开启固定列
           width: 150,
           innerClassName: 'm-n'
         };
         columns.push(operation);
+      } else {
+        operation = {
+          ...operation
+        };
+        columns.splice(idx, 1, operation);
       }
 
       operation.buttons = Array.isArray(operation.buttons)
@@ -1629,26 +1713,6 @@ export default class FormTable extends React.Component<TableProps, TableState> {
       if (operation.hasOwnProperty('quickEdit')) {
         delete operation.quickEdit;
       }
-    }
-
-    if (showIndex) {
-      columns.unshift({
-        label: __('Table.index'),
-        width: 50,
-        children: (props: any) => {
-          const indexes = (props.rowIndexPath as string)
-            .split('.')
-            .map(item => parseInt(item, 10) + 1);
-          indexes[0] += props.offset;
-          return (
-            <td className={props.className}>
-              {props.cellPrefix}
-              <span>{indexes.join('.')}</span>
-              {props.cellAffix}
-            </td>
-          );
-        }
-      });
     }
 
     return columns;
@@ -1683,50 +1747,14 @@ export default class FormTable extends React.Component<TableProps, TableState> {
     this.setState(
       (state, props) => {
         const newState = {};
-        const {perPage} = props;
         const editIndex = state.editIndex;
         const lastModifiedRow = state.lastModifiedRow;
-
-        if (editIndex) {
-          const indexes = editIndex.split('.').map(item => parseInt(item, 10));
-          let items = state.items.concat();
-          const origin = getTree(items, indexes);
-
-          if (!origin) {
-            return newState;
-          }
-
-          const value: any = {
-            ...rows
-          };
-          const originItems = items;
-          items = spliceTree(items, indexes, 1, value);
-          this.reUseRowId(items, originItems, indexes);
-
-          Object.assign(newState, {
-            items,
-            /** 记录最近一次编辑记录，用于取消编辑数据回溯， */
-            ...(lastModifiedRow?.index === editIndex
-              ? {}
-              : {
-                  lastModifiedRow: origin.hasOwnProperty(PLACE_HOLDER)
-                    ? undefined
-                    : {index: editIndex, data: {...origin}}
-                })
-          });
-          return newState;
-        }
-
-        const page = state.page;
         let items = state.items.concat();
 
         if (Array.isArray(rows)) {
           (rowIndexes as Array<string>).forEach((rowIndex, index) => {
+            rowIndex = this.convertToRawPath(rowIndex, state);
             const indexes = rowIndex.split('.').map(item => parseInt(item, 10));
-
-            if (page && page > 1 && typeof perPage === 'number') {
-              indexes[0] += (page - 1) * perPage;
-            }
             // const origin = getTree(items, indexes);
             const data = {
               ...getTree(rows, indexes)
@@ -1735,13 +1763,48 @@ export default class FormTable extends React.Component<TableProps, TableState> {
             items = spliceTree(items, indexes, 1, data);
           });
         } else {
+          rowIndexes = this.convertToRawPath(rowIndexes as string, state);
+
+          // 修改当前正在编辑的行
+          if (editIndex && rowIndexes === editIndex) {
+            const indexes = editIndex
+              .split('.')
+              .map(item => parseInt(item, 10));
+            let items = state.items.concat();
+            const origin = getTree(items, indexes);
+
+            if (!origin) {
+              return newState;
+            }
+
+            const value: any = {
+              ...rows
+            };
+            const originItems = items;
+            items = spliceTree(items, indexes, 1, value);
+            this.reUseRowId(items, originItems, indexes);
+
+            Object.assign(newState, {
+              items,
+              filteredItems: state.filteredItems.map(a =>
+                a === origin ? value : a
+              ),
+              rowIndex: editIndex,
+              /** 记录最近一次编辑记录，用于取消编辑数据回溯， */
+              ...(lastModifiedRow?.index === editIndex
+                ? {}
+                : {
+                    lastModifiedRow: origin.hasOwnProperty(PLACE_HOLDER)
+                      ? undefined
+                      : {index: editIndex, data: {...origin}}
+                  })
+            });
+            return newState;
+          }
+
           const indexes = (rowIndexes as string)
             .split('.')
             .map(item => parseInt(item, 10));
-
-          if (page && page > 1 && typeof perPage === 'number') {
-            indexes[0] += (page - 1) * perPage;
-          }
 
           // const origin = getTree(items, indexes);
 
@@ -1753,7 +1816,9 @@ export default class FormTable extends React.Component<TableProps, TableState> {
         }
 
         Object.assign(newState, {
-          items
+          items,
+          rowIndex: rowIndexes as string,
+          ...this.transformState(items, state)
         });
         callback = this.lazyEmitValue;
 
@@ -1785,7 +1850,8 @@ export default class FormTable extends React.Component<TableProps, TableState> {
         );
         callback = state.editIndex == row.path ? undefined : this.lazyEmitValue;
         return {
-          items
+          items,
+          ...this.transformState(items)
         };
       },
       () => {
@@ -1803,7 +1869,17 @@ export default class FormTable extends React.Component<TableProps, TableState> {
   }
 
   handlePageChange(page: number) {
-    this.setState({page});
+    this.setState({
+      ...this.transformState(this.state.items, {page})
+    });
+  }
+
+  handleTableQuery(query: any): any {
+    query = {...this.state.query, ...query};
+    this.setState({
+      query,
+      ...this.transformState(this.state.items, {query})
+    });
   }
 
   /**
@@ -1815,17 +1891,12 @@ export default class FormTable extends React.Component<TableProps, TableState> {
    */
   @autobind
   handlePristineChange(data: Record<string, any>, rowIndex: string) {
-    const {needConfirm, perPage} = this.props;
+    const {needConfirm} = this.props;
     const indexes = rowIndex.split('.').map(item => parseInt(item, 10));
 
     this.setState(
       prevState => {
         let items = prevState.items.concat();
-        const page = prevState.page;
-
-        if (page && page > 1 && typeof perPage === 'number') {
-          indexes[0] += (page - 1) * perPage;
-        }
         const origin = getTree(items, indexes);
         const value = {
           ...origin,
@@ -1837,7 +1908,8 @@ export default class FormTable extends React.Component<TableProps, TableState> {
         this.reUseRowId(items, originItems, indexes);
 
         return {
-          items
+          items,
+          ...this.transformState(items)
         };
       },
       () => {
@@ -1874,6 +1946,10 @@ export default class FormTable extends React.Component<TableProps, TableState> {
     return disabled || !!this.state.editIndex;
   }
 
+  filterItemIndex(index: number | string) {
+    return this.convertToRawPath(index as string);
+  }
+
   render() {
     const {
       className,
@@ -1905,7 +1981,8 @@ export default class FormTable extends React.Component<TableProps, TableState> {
       footerAddBtn,
       toolbarClassName,
       onEvent,
-      testIdBuilder
+      testIdBuilder,
+      showIndex
     } = this.props;
     const maxLength = this.resolveVariableProps(this.props, 'maxLength');
 
@@ -1913,20 +1990,18 @@ export default class FormTable extends React.Component<TableProps, TableState> {
       return null;
     }
 
-    let items = this.state.items;
-    let showPager = false;
+    const query = this.state.query;
+    const filteredItems = this.state.filteredItems;
+    const items = this.state.items;
+    let showPager = typeof perPage === 'number';
     let page = this.state.page || 1;
-    let offset = 0;
-    let lastPage = 1;
-    if (typeof perPage === 'number' && perPage && items.length > perPage) {
-      lastPage = Math.ceil(items.length / perPage);
-      if (page > lastPage) {
-        page = lastPage;
-      }
-      items = items.slice((page - 1) * perPage, page * perPage);
-      showPager = true;
-      offset = (page - 1) * perPage;
-    }
+
+    // 底部新增按钮是否显示
+    const footerAddBtnVisible =
+      !isStatic &&
+      addable &&
+      showFooterAddBtn !== false &&
+      (!maxLength || maxLength > this.state.items.length);
 
     return (
       <div className={cx('InputTable', className)}>
@@ -1941,7 +2016,8 @@ export default class FormTable extends React.Component<TableProps, TableState> {
             affixRow,
             autoFillHeight,
             tableContentClassName,
-            onEvent
+            onEvent,
+            showIndex
           },
           {
             ref: this.tableRef,
@@ -1949,7 +2025,7 @@ export default class FormTable extends React.Component<TableProps, TableState> {
             saveImmediately: true,
             disabled,
             draggable: draggable && !this.state.editIndex,
-            items: items,
+            items: filteredItems,
             getEntryId: this.getEntryId,
             reUseRow: 'match', // 寻找 id 相同的行，更新数据
             onSave: this.handleTableSave,
@@ -1959,24 +2035,24 @@ export default class FormTable extends React.Component<TableProps, TableState> {
             quickEditFormRef: this.subFormRef,
             quickEditFormItemRef: this.subFormItemRef,
             columnsTogglable: columnsTogglable,
-            combineNum: combineNum,
+            combineNum: this.state.editIndex ? 0 : combineNum,
             combineFromIndex: combineFromIndex,
             expandConfig,
             canAccessSuperData,
-            offset,
             rowClassName,
             rowClassNameExpr,
             onPristineChange: this.handlePristineChange,
-            testIdBuilder: testIdBuilder?.getChild('table')
+            testIdBuilder: testIdBuilder?.getChild('table'),
+            onQuery: this.handleTableQuery,
+            query: query,
+            orderBy: query?.orderBy,
+            orderDir: query?.orderDir,
+            filterItemIndex: this.filterItemIndex
           }
         )}
-        {(!isStatic &&
-          addable &&
-          showFooterAddBtn !== false &&
-          (!maxLength || maxLength > items.length)) ||
-        showPager ? (
+        {footerAddBtnVisible || showPager ? (
           <div className={cx('InputTable-toolbar', toolbarClassName)}>
-            {addable && showFooterAddBtn !== false
+            {footerAddBtnVisible
               ? render(
                   'button',
                   {
@@ -2005,10 +2081,11 @@ export default class FormTable extends React.Component<TableProps, TableState> {
                   {
                     activePage: page,
                     perPage,
-                    total: this.state.items.length,
+                    total: this.state.total,
                     onPageChange: this.handlePageChange,
                     className: 'InputTable-pager',
-                    testIdBuilder: testIdBuilder?.getChild('page')
+                    testIdBuilder: testIdBuilder?.getChild('page'),
+                    disabled: !!this.state.editIndex
                   }
                 )
               : null}
@@ -2029,15 +2106,22 @@ export class TableControlRenderer extends FormTable {
     index?: number | string,
     condition?: any
   ) {
-    const len = this.state.items.length;
     if (index !== undefined) {
       let items = [...this.state.items];
       const indexs = String(index).split(',');
       indexs.forEach(i => {
         const indexes = i.split('.').map(item => parseInt(item, 10));
-        items = spliceTree(items, indexes, 1, value);
+
+        const originItems = items;
+        items = spliceTree(
+          items,
+          indexes,
+          1,
+          replace ? value : {...getTree(items, indexes), ...value}
+        );
+        this.reUseRowId(items, originItems, indexes);
       });
-      this.setState({items}, () => {
+      this.setState({items, ...this.transformState(items)}, () => {
         this.emitValue();
       });
     } else if (condition !== undefined) {
@@ -2052,7 +2136,16 @@ export class TableControlRenderer extends FormTable {
           );
 
           if (isUpdate) {
-            items = spliceTree(items, [...indexes, index], 1, value);
+            const originItems = items;
+            items = spliceTree(
+              items,
+              [...indexes, index],
+              1,
+              replace
+                ? value
+                : {...getTree(items, [...indexes, index]), ...value}
+            );
+            this.reUseRowId(items, originItems, [...indexes, index]);
           }
         });
 
@@ -2060,14 +2153,16 @@ export class TableControlRenderer extends FormTable {
       });
       await Promise.all(promises.map(fn => fn()));
 
-      this.setState({items}, () => {
+      this.setState({items, ...this.transformState(items)}, () => {
         this.emitValue();
       });
     } else {
       // 如果setValue动作没有传入index，则直接替换组件数据
+      const items = [...value];
       this.setState(
         {
-          items: [...value]
+          items: items,
+          ...this.transformState(items)
         },
         () => {
           this.emitValue();
@@ -2151,7 +2246,8 @@ export class TableControlRenderer extends FormTable {
 
         this.setState(
           {
-            items
+            items,
+            ...this.transformState(items)
           },
           () => {
             if (toAdd.length === 1 && needConfirm !== false) {
@@ -2172,12 +2268,25 @@ export class TableControlRenderer extends FormTable {
       const deletedItems: any = [];
 
       if (args?.index !== undefined) {
-        const indexs = String(args.index).split(',');
-        indexs.forEach(i => {
-          const indexes = i.split('.').map(item => parseInt(item, 10));
-          deletedItems.push(getTree(items, indexes));
-          items = spliceTree(items, indexes, 1);
-        });
+        String(args.index)
+          .split(',')
+          .map(i => i.split('.').map(item => parseInt(item, 10)))
+          // 从右向左遍历，这样才不会出现索引失效
+          .sort((a, b) => {
+            const len = Math.max(a.length, b.length);
+            for (let i = 0; i < len; i++) {
+              const aVal = a[i] || 0;
+              const bVal = b[i] || 0;
+              if (aVal !== bVal) {
+                return bVal - aVal;
+              }
+            }
+            return 0;
+          })
+          .forEach(indexes => {
+            deletedItems.push(getTree(items, indexes));
+            items = spliceTree(items, indexes, 1);
+          });
       } else if (args?.condition !== undefined) {
         const promises: Array<() => Promise<any>> = [];
         everyTree(items, (item, index, level, paths, indexes) => {
@@ -2218,7 +2327,8 @@ export class TableControlRenderer extends FormTable {
       }
       this.setState(
         {
-          items: items
+          items: items,
+          ...this.transformState(items)
         },
         () => {
           onChange?.(items);
@@ -2241,7 +2351,8 @@ export class TableControlRenderer extends FormTable {
       const newItems = Array.isArray(pristineVal) ? pristineVal : [];
       this.setState(
         {
-          items: newItems
+          items: newItems,
+          ...this.transformState(newItems)
         },
         () => {
           onChange?.(newItems);

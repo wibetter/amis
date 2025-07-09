@@ -46,7 +46,7 @@ import Picker from './Picker';
 import PopUp from './PopUp';
 import BasePopover, {PopOverOverlay} from './PopOverContainer';
 import SelectMobile from './SelectMobile';
-
+import AutoFoldedList from './AutoFoldedList';
 import type {TooltipObject} from '../components/TooltipWrapper';
 
 export {Option, Options};
@@ -85,11 +85,12 @@ export interface OptionProps {
   virtualThreshold?: number; // 数据量多大的时候开启虚拟渲染
   hasError?: boolean;
   block?: boolean;
+  controlStyle?: any;
   onAdd?: (
     idx?: number | Array<number>,
     value?: any,
     skipForm?: boolean,
-    closePopOver?: () => void
+    callback?: () => void
   ) => void;
   editable?: boolean;
   onEdit?: (value: Option, origin?: Option, skipForm?: boolean) => void;
@@ -401,6 +402,8 @@ export interface SelectProps
    * 检索函数
    */
   filterOption?: FilterOption;
+
+  dataName?: string;
 }
 
 interface SelectState {
@@ -608,12 +611,13 @@ export class Select extends React.Component<SelectProps, SelectState> {
 
     const inputValue = this.state.inputValue;
     let {selection} = this.state;
-    let filtedOptions: Array<Option> =
+    let filtedOptions: Array<Option> = (
       inputValue && checkAllBySearch !== false
         ? filterOption(options, inputValue, {
             keys: [labelField || 'label', valueField || 'value']
           })
-        : options.concat();
+        : options.concat()
+    ).filter(option => option && !option.disabled);
     const optionsValues = filtedOptions.map(option => option.value);
     const selectionValues = selection.map(select => select.value);
     const checkedAll = optionsValues.every(
@@ -764,7 +768,7 @@ export class Select extends React.Component<SelectProps, SelectState> {
   @autobind
   handleAddClick() {
     const {onAdd} = this.props;
-    onAdd && onAdd(undefined, undefined, false, this.close);
+    onAdd && onAdd();
   }
 
   @autobind
@@ -807,94 +811,82 @@ export class Select extends React.Component<SelectProps, SelectState> {
           {__(placeholder)}
         </div>
       );
-    }
-
-    if (
-      multiple &&
-      maxTagCount != null &&
-      isInteger(Math.floor(maxTagCount)) &&
-      Math.floor(maxTagCount) >= 0 &&
-      Math.floor(maxTagCount) < selection.length
-    ) {
-      const maxVisibleCount = Math.floor(maxTagCount);
+    } else if (multiple && typeof maxTagCount === 'number' && maxTagCount > 0) {
       const tooltipProps: TooltipObject = {
-        placement: 'top',
-        trigger: 'hover',
-        showArrow: false,
-        offset: [0, -10],
         tooltipClassName: cx(
           'Select-overflow',
           overflowTagPopover?.tooltipClassName
         ),
         ...omit(overflowTagPopover, ['children', 'content', 'tooltipClassName'])
       };
-      return [
-        ...selection.slice(0, maxVisibleCount),
-        {[labelKey]: `+ ${selection.length - maxVisibleCount} ...`}
-      ].map((item, index) => {
-        const label = labelToString(item[labelKey]);
-        if (index === maxVisibleCount) {
-          return (
-            <TooltipWrapper
-              key={selection.length}
-              container={popOverContainer}
-              tooltip={{
-                ...tooltipProps,
-                children: () => (
-                  <div className={cx('Select-overflow-wrapper')}>
-                    {selection
-                      .slice(maxVisibleCount, selection.length)
-                      .map((item, index) => {
-                        const itemIndex = index + maxVisibleCount;
-                        const label = labelToString(item[labelKey]);
-                        return (
-                          <div
-                            key={itemIndex}
-                            className={cx('Select-value', {
-                              'is-disabled': disabled,
-                              'is-invalid': showInvalidMatch
-                                ? item.__unmatched
-                                : false
-                            })}
-                          >
-                            <span className={cx('Select-valueLabel')}>
-                              {renderValueLabel
-                                ? renderValueLabel(item)
-                                : label}
-                            </span>
-                            <span
-                              className={cx('Select-valueIcon', {
-                                'is-disabled': disabled || item.disabled
-                              })}
-                              onClick={this.removeItem.bind(this, itemIndex)}
-                            >
-                              <Icon icon="close" className="icon" />
-                            </span>
-                          </div>
-                        );
-                      })}
-                  </div>
-                )
-              }}
-            >
+
+      return (
+        <AutoFoldedList
+          tooltipClassName={cx('Select-overflow-wrapper')}
+          items={selection}
+          popOverContainer={popOverContainer}
+          tooltipOptions={tooltipProps}
+          maxVisibleCount={maxTagCount}
+          renderItem={(item, index, folded) => {
+            const label = labelToString(item[labelKey]);
+            const body = (
               <div
+                key={index}
                 className={cx('Select-value', {
-                  'is-disabled': disabled,
+                  'is-disabled': disabled || item.disabled,
                   'is-invalid': showInvalidMatch ? item.__unmatched : false
                 })}
-                onClick={(e: React.MouseEvent) =>
-                  e.stopPropagation()
-                } /** 避免点击查看浮窗时呼出下拉菜单 */
               >
                 <span className={cx('Select-valueLabel')}>
                   {renderValueLabel ? renderValueLabel(item) : label}
                 </span>
+                <span
+                  className={cx('Select-valueIcon', {
+                    'is-disabled': disabled || item.disabled
+                  })}
+                  onClick={this.removeItem.bind(this, index)}
+                >
+                  <Icon icon="close" className="icon" />
+                </span>
               </div>
-            </TooltipWrapper>
+            );
+            return folded ? (
+              body
+            ) : (
+              <TooltipWrapper
+                container={popOverContainer}
+                placement={'top'}
+                tooltip={label}
+                trigger={'hover'}
+                key={index}
+              >
+                {body}
+              </TooltipWrapper>
+            );
+          }}
+        ></AutoFoldedList>
+      );
+    } else {
+      return selection.map((item, index) => {
+        const label = labelToString(item[labelKey]);
+
+        if (!multiple) {
+          return (
+            <div
+              className={cx('Select-value', {
+                'is-disabled': disabled,
+                'is-invalid': showInvalidMatch ? item.__unmatched : false
+              })}
+              key={index}
+            >
+              {renderValueLabel ? renderValueLabel(item) : label}
+            </div>
           );
         }
 
-        return (
+        return valuesNoWrap ? (
+          `${label}${index === selection.length - 1 ? '' : ' + '}`
+        ) : (
           <TooltipWrapper
             container={popOverContainer}
             placement={'top'}
@@ -904,7 +896,7 @@ export class Select extends React.Component<SelectProps, SelectState> {
           >
             <div
               className={cx('Select-value', {
-                'is-disabled': disabled,
+                'is-disabled': disabled || item.disabled,
                 'is-invalid': showInvalidMatch ? item.__unmatched : false
               })}
             >
@@ -924,55 +916,6 @@ export class Select extends React.Component<SelectProps, SelectState> {
         );
       });
     }
-
-    return selection.map((item, index) => {
-      const label = labelToString(item[labelKey]);
-
-      if (!multiple) {
-        return (
-          <div
-            className={cx('Select-value', {
-              'is-disabled': disabled,
-              'is-invalid': showInvalidMatch ? item.__unmatched : false
-            })}
-            key={index}
-          >
-            {renderValueLabel ? renderValueLabel(item) : label}
-          </div>
-        );
-      }
-
-      return valuesNoWrap ? (
-        `${label}${index === selection.length - 1 ? '' : ' + '}`
-      ) : (
-        <TooltipWrapper
-          container={popOverContainer}
-          placement={'top'}
-          tooltip={label}
-          trigger={'hover'}
-          key={index}
-        >
-          <div
-            className={cx('Select-value', {
-              'is-disabled': disabled,
-              'is-invalid': showInvalidMatch ? item.__unmatched : false
-            })}
-          >
-            <span className={cx('Select-valueLabel')}>
-              {renderValueLabel ? renderValueLabel(item) : label}
-            </span>
-            <span
-              className={cx('Select-valueIcon', {
-                'is-disabled': disabled || item.disabled
-              })}
-              onClick={this.removeItem.bind(this, index)}
-            >
-              <Icon icon="close" className="icon" />
-            </span>
-          </div>
-        </TooltipWrapper>
-      );
-    });
   }
 
   renderOuter({
@@ -1092,6 +1035,7 @@ export class Select extends React.Component<SelectProps, SelectState> {
                 }}
                 disabled={item.disabled}
                 testIdBuilder={optTestIdBudr?.getChild('chekbx')}
+                size="sm"
               >
                 {renderMenu(item, {
                   multiple,
@@ -1327,7 +1271,8 @@ export class Select extends React.Component<SelectProps, SelectState> {
       mobileUI,
       hasError,
       testIdBuilder,
-      loadingConfig
+      loadingConfig,
+      controlStyle
     } = this.props;
 
     const selection = this.state.selection;
@@ -1375,6 +1320,8 @@ export class Select extends React.Component<SelectProps, SelectState> {
                 },
                 className
               )}
+              data-amis-name={this.props.dataName}
+              style={controlStyle}
             >
               <div
                 className={cx(`Select-valueWrap`, {
@@ -1421,12 +1368,13 @@ export class Select extends React.Component<SelectProps, SelectState> {
   }
 }
 
-const EnhancedSelect = themeable(
-  localeable(
-    uncontrollable(Select, {
-      value: 'onChange'
-    })
-  )
+const methods = ['focus', 'blur'];
+const EnhancedSelect = uncontrollable(
+  themeable(localeable(Select, methods), methods),
+  {
+    value: 'onChange'
+  },
+  methods
 );
 
 export default EnhancedSelect;

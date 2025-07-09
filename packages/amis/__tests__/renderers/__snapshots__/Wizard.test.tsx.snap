@@ -55,7 +55,9 @@ exports[`Renderer:Wizard actionPrevLabel actionNextLabel actionFinishLabel class
                   <div
                     class="cxd-StepsItem-description cxd-StepsItem-ellText"
                   >
-                    <span />
+                    <span
+                      class=""
+                    />
                   </div>
                 </div>
               </div>
@@ -98,7 +100,9 @@ exports[`Renderer:Wizard actionPrevLabel actionNextLabel actionFinishLabel class
                   <div
                     class="cxd-StepsItem-description cxd-StepsItem-ellText"
                   >
-                    <span />
+                    <span
+                      class=""
+                    />
                   </div>
                 </div>
               </div>
@@ -119,7 +123,7 @@ exports[`Renderer:Wizard actionPrevLabel actionNextLabel actionFinishLabel class
             type="submit"
           />
           <span
-            class="cxd-TplField"
+            class="cxd-TplField fr-view"
           >
             <span>
               这是最后一步了
@@ -205,7 +209,9 @@ exports[`Renderer:Wizard actionPrevLabel actionNextLabel actionFinishLabel class
                   <div
                     class="cxd-StepsItem-description cxd-StepsItem-ellText"
                   >
-                    <span />
+                    <span
+                      class=""
+                    />
                   </div>
                 </div>
               </div>
@@ -248,7 +254,9 @@ exports[`Renderer:Wizard actionPrevLabel actionNextLabel actionFinishLabel class
                   <div
                     class="cxd-StepsItem-description cxd-StepsItem-ellText"
                   >
-                    <span />
+                    <span
+                      class=""
+                    />
                   </div>
                 </div>
               </div>
@@ -270,6 +278,7 @@ exports[`Renderer:Wizard actionPrevLabel actionNextLabel actionFinishLabel class
           />
           <div
             class="cxd-Form-item cxd-Form-item--normal"
+            data-amis-name="website"
             data-role="form-item"
           >
             <label
@@ -277,7 +286,7 @@ exports[`Renderer:Wizard actionPrevLabel actionNextLabel actionFinishLabel class
             >
               <span>
                 <span
-                  class="cxd-TplField"
+                  class="cxd-TplField fr-view"
                 >
                   <span>
                     网址
@@ -305,6 +314,7 @@ exports[`Renderer:Wizard actionPrevLabel actionNextLabel actionFinishLabel class
           </div>
           <div
             class="cxd-Form-item cxd-Form-item--normal"
+            data-amis-name="name"
             data-role="form-item"
           >
             <label
@@ -312,7 +322,7 @@ exports[`Renderer:Wizard actionPrevLabel actionNextLabel actionFinishLabel class
             >
               <span>
                 <span
-                  class="cxd-TplField"
+                  class="cxd-TplField fr-view"
                 >
                   <span>
                     名称
@@ -384,6 +394,7 @@ exports[`Renderer:Wizard default 1`] = `
           />
           <div
             class="cxd-Form-item cxd-Form-item--normal is-required"
+            data-amis-name="website"
             data-role="form-item"
           >
             <label
@@ -391,7 +402,7 @@ exports[`Renderer:Wizard default 1`] = `
             >
               <span>
                 <span
-                  class="cxd-TplField"
+                  class="cxd-TplField fr-view"
                 >
                   <span>
                     网址
@@ -424,6 +435,7 @@ exports[`Renderer:Wizard default 1`] = `
           </div>
           <div
             class="cxd-Form-item cxd-Form-item--normal is-required"
+            data-amis-name="name"
             data-role="form-item"
           >
             <label
@@ -431,7 +443,7 @@ exports[`Renderer:Wizard default 1`] = `
             >
               <span>
                 <span
-                  class="cxd-TplField"
+                  class="cxd-TplField fr-view"
                 >
                   <span>
                     名称
@@ -534,7 +546,9 @@ exports[`Renderer:Wizard dialog 1`] = `
                           <div
                             class="cxd-StepsItem-description cxd-StepsItem-ellText"
                           >
-                            <span />
+                            <span
+                              class=""
+                            />
                           </div>
                         </div>
                       </div>
@@ -577,7 +591,9 @@ exports[`Renderer:Wizard dialog 1`] = `
                           <div
                             class="cxd-StepsItem-description cxd-StepsItem-ellText"
                           >
-                            <span />
+                            <span
+                              class=""
+                            />
                           </div>
                         </div>
                       </div>
@@ -599,6 +615,7 @@ exports[`Renderer:Wizard dialog 1`] = `
                   />
                   <div
                     class="cxd-Form-item cxd-Form-item--normal"
+                    data-amis-name="website"
                     data-role="form-item"
                   >
                     <label
@@ -606,7 +623,7 @@ exports[`Renderer:Wizard dialog 1`] = `
                     >
                       <span>
                         <span
-                          class="cxd-TplField"
+                          class="cxd-TplField fr-view"
                         >
                           <span>
                             网址
@@ -634,6 +651,7 @@ exports[`Renderer:Wizard dialog 1`] = `
                   </div>
                   <div
                     class="cxd-Form-item cxd-Form-item--normal"
+                    data-amis-name="name"
                     data-role="form-item"
                   >
                     <label
@@ -641,7 +659,7 @@ exports[`Renderer:Wizard dialog 1`] = `
                     >
                       <span>
                         <span
-                          class="cxd-TplField"
+                          class="cxd-TplField fr-view"
                         >
                           <span>
                             名称
@@ -744,6 +762,7 @@ exports[`Renderer:Wizard dialog 1`] = `
           />
           <div
             class="cxd-Form-item cxd-Form-item--horizontal"
+            data-amis-name="name"
             data-role="form-item"
           >
             <label
@@ -751,7 +770,7 @@ exports[`Renderer:Wizard dialog 1`] = `
             >
               <span>
                 <span
-                  class="cxd-TplField"
+                  class="cxd-TplField fr-view"
                 >
                   <span>
                     Name
@@ -873,7 +892,9 @@ exports[`Renderer:Wizard dialog 2`] = `
                           <div
                             class="cxd-StepsItem-description cxd-StepsItem-ellText"
                           >
-                            <span />
+                            <span
+                              class=""
+                            />
                           </div>
                         </div>
                       </div>
@@ -916,7 +937,9 @@ exports[`Renderer:Wizard dialog 2`] = `
                           <div
                             class="cxd-StepsItem-description cxd-StepsItem-ellText"
                           >
-                            <span />
+                            <span
+                              class=""
+                            />
                           </div>
                         </div>
                       </div>
@@ -938,6 +961,7 @@ exports[`Renderer:Wizard dialog 2`] = `
                   />
                   <div
                     class="cxd-Form-item cxd-Form-item--normal"
+                    data-amis-name="website"
                     data-role="form-item"
                   >
                     <label
@@ -945,7 +969,7 @@ exports[`Renderer:Wizard dialog 2`] = `
                     >
                       <span>
                         <span
-                          class="cxd-TplField"
+                          class="cxd-TplField fr-view"
                         >
                           <span>
                             网址
@@ -973,6 +997,7 @@ exports[`Renderer:Wizard dialog 2`] = `
                   </div>
                   <div
                     class="cxd-Form-item cxd-Form-item--normal"
+                    data-amis-name="name"
                     data-role="form-item"
                   >
                     <label
@@ -980,7 +1005,7 @@ exports[`Renderer:Wizard dialog 2`] = `
                     >
                       <span>
                         <span
-                          class="cxd-TplField"
+                          class="cxd-TplField fr-view"
                         >
                           <span>
                             名称
@@ -1095,7 +1120,9 @@ exports[`Renderer:Wizard initApi default 1`] = `
                   <div
                     class="cxd-StepsItem-description cxd-StepsItem-ellText"
                   >
-                    <span />
+                    <span
+                      class=""
+                    />
                   </div>
                 </div>
               </div>
@@ -1138,7 +1165,9 @@ exports[`Renderer:Wizard initApi default 1`] = `
                   <div
                     class="cxd-StepsItem-description cxd-StepsItem-ellText"
                   >
-                    <span />
+                    <span
+                      class=""
+                    />
                   </div>
                 </div>
               </div>
@@ -1181,7 +1210,9 @@ exports[`Renderer:Wizard initApi default 1`] = `
                   <div
                     class="cxd-StepsItem-description cxd-StepsItem-ellText"
                   >
-                    <span />
+                    <span
+                      class=""
+                    />
                   </div>
                 </div>
               </div>
@@ -1203,6 +1234,7 @@ exports[`Renderer:Wizard initApi default 1`] = `
           />
           <div
             class="cxd-Form-item cxd-Form-item--normal is-required"
+            data-amis-name="website"
             data-role="form-item"
           >
             <label
@@ -1210,7 +1242,7 @@ exports[`Renderer:Wizard initApi default 1`] = `
             >
               <span>
                 <span
-                  class="cxd-TplField"
+                  class="cxd-TplField fr-view"
                 >
                   <span>
                     网址
@@ -1243,6 +1275,7 @@ exports[`Renderer:Wizard initApi default 1`] = `
           </div>
           <div
             class="cxd-Form-item cxd-Form-item--normal is-required"
+            data-amis-name="name"
             data-role="form-item"
           >
             <label
@@ -1250,7 +1283,7 @@ exports[`Renderer:Wizard initApi default 1`] = `
             >
               <span>
                 <span
-                  class="cxd-TplField"
+                  class="cxd-TplField fr-view"
                 >
                   <span>
                     名称
@@ -1377,7 +1410,9 @@ exports[`Renderer:Wizard initApi reload 1`] = `
                           <div
                             class="cxd-StepsItem-description cxd-StepsItem-ellText"
                           >
-                            <span />
+                            <span
+                              class=""
+                            />
                           </div>
                         </div>
                       </div>
@@ -1420,7 +1455,9 @@ exports[`Renderer:Wizard initApi reload 1`] = `
                           <div
                             class="cxd-StepsItem-description cxd-StepsItem-ellText"
                           >
-                            <span />
+                            <span
+                              class=""
+                            />
                           </div>
                         </div>
                       </div>
@@ -1442,6 +1479,7 @@ exports[`Renderer:Wizard initApi reload 1`] = `
                   />
                   <div
                     class="cxd-Form-item cxd-Form-item--normal"
+                    data-amis-name="website"
                     data-role="form-item"
                   >
                     <label
@@ -1449,7 +1487,7 @@ exports[`Renderer:Wizard initApi reload 1`] = `
                     >
                       <span>
                         <span
-                          class="cxd-TplField"
+                          class="cxd-TplField fr-view"
                         >
                           <span>
                             网址
@@ -1477,6 +1515,7 @@ exports[`Renderer:Wizard initApi reload 1`] = `
                   </div>
                   <div
                     class="cxd-Form-item cxd-Form-item--normal"
+                    data-amis-name="name"
                     data-role="form-item"
                   >
                     <label
@@ -1484,7 +1523,7 @@ exports[`Renderer:Wizard initApi reload 1`] = `
                     >
                       <span>
                         <span
-                          class="cxd-TplField"
+                          class="cxd-TplField fr-view"
                         >
                           <span>
                             名称
@@ -1602,7 +1641,9 @@ exports[`Renderer:Wizard initApi reload 2`] = `
                           <div
                             class="cxd-StepsItem-description cxd-StepsItem-ellText"
                           >
-                            <span />
+                            <span
+                              class=""
+                            />
                           </div>
                         </div>
                       </div>
@@ -1645,7 +1686,9 @@ exports[`Renderer:Wizard initApi reload 2`] = `
                           <div
                             class="cxd-StepsItem-description cxd-StepsItem-ellText"
                           >
-                            <span />
+                            <span
+                              class=""
+                            />
                           </div>
                         </div>
                       </div>
@@ -1666,7 +1709,7 @@ exports[`Renderer:Wizard initApi reload 2`] = `
                     type="submit"
                   />
                   <span
-                    class="cxd-TplField"
+                    class="cxd-TplField fr-view"
                   >
                     <span>
                       这是最后一步了
@@ -1772,7 +1815,9 @@ exports[`Renderer:Wizard initApi reload 3`] = `
                           <div
                             class="cxd-StepsItem-description cxd-StepsItem-ellText"
                           >
-                            <span />
+                            <span
+                              class=""
+                            />
                           </div>
                         </div>
                       </div>
@@ -1815,7 +1860,9 @@ exports[`Renderer:Wizard initApi reload 3`] = `
                           <div
                             class="cxd-StepsItem-description cxd-StepsItem-ellText"
                           >
-                            <span />
+                            <span
+                              class=""
+                            />
                           </div>
                         </div>
                       </div>
@@ -1836,7 +1883,7 @@ exports[`Renderer:Wizard initApi reload 3`] = `
                     type="submit"
                   />
                   <span
-                    class="cxd-TplField"
+                    class="cxd-TplField fr-view"
                   >
                     <span>
                       这是最后一步了
@@ -1960,7 +2007,9 @@ exports[`Renderer:Wizard initApi show loading 2`] = `
                   <div
                     class="cxd-StepsItem-description cxd-StepsItem-ellText"
                   >
-                    <span />
+                    <span
+                      class=""
+                    />
                   </div>
                 </div>
               </div>
@@ -2003,7 +2052,9 @@ exports[`Renderer:Wizard initApi show loading 2`] = `
                   <div
                     class="cxd-StepsItem-description cxd-StepsItem-ellText"
                   >
-                    <span />
+                    <span
+                      class=""
+                    />
                   </div>
                 </div>
               </div>
@@ -2046,7 +2097,9 @@ exports[`Renderer:Wizard initApi show loading 2`] = `
                   <div
                     class="cxd-StepsItem-description cxd-StepsItem-ellText"
                   >
-                    <span />
+                    <span
+                      class=""
+                    />
                   </div>
                 </div>
               </div>
@@ -2068,6 +2121,7 @@ exports[`Renderer:Wizard initApi show loading 2`] = `
           />
           <div
             class="cxd-Form-item cxd-Form-item--normal is-required"
+            data-amis-name="website"
             data-role="form-item"
           >
             <label
@@ -2075,7 +2129,7 @@ exports[`Renderer:Wizard initApi show loading 2`] = `
             >
               <span>
                 <span
-                  class="cxd-TplField"
+                  class="cxd-TplField fr-view"
                 >
                   <span>
                     网址
@@ -2108,6 +2162,7 @@ exports[`Renderer:Wizard initApi show loading 2`] = `
           </div>
           <div
             class="cxd-Form-item cxd-Form-item--normal is-required"
+            data-amis-name="name"
             data-role="form-item"
           >
             <label
@@ -2115,7 +2170,7 @@ exports[`Renderer:Wizard initApi show loading 2`] = `
             >
               <span>
                 <span
-                  class="cxd-TplField"
+                  class="cxd-TplField fr-view"
                 >
                   <span>
                     名称
@@ -2192,6 +2247,7 @@ exports[`Renderer:Wizard readOnly 1`] = `
           />
           <div
             class="cxd-Form-item cxd-Form-item--normal"
+            data-amis-name="website"
             data-role="form-item"
           >
             <label
@@ -2199,7 +2255,7 @@ exports[`Renderer:Wizard readOnly 1`] = `
             >
               <span>
                 <span
-                  class="cxd-TplField"
+                  class="cxd-TplField fr-view"
                 >
                   <span>
                     网址
@@ -2228,6 +2284,7 @@ exports[`Renderer:Wizard readOnly 1`] = `
           </div>
           <div
             class="cxd-Form-item cxd-Form-item--normal"
+            data-amis-name="name"
             data-role="form-item"
           >
             <label
@@ -2235,7 +2292,7 @@ exports[`Renderer:Wizard readOnly 1`] = `
             >
               <span>
                 <span
-                  class="cxd-TplField"
+                  class="cxd-TplField fr-view"
                 >
                   <span>
                     名称
@@ -2323,7 +2380,9 @@ exports[`Renderer:Wizard send data 1`] = `
                   <div
                     class="cxd-StepsItem-description cxd-StepsItem-ellText"
                   >
-                    <span />
+                    <span
+                      class=""
+                    />
                   </div>
                 </div>
               </div>
@@ -2366,7 +2425,9 @@ exports[`Renderer:Wizard send data 1`] = `
                   <div
                     class="cxd-StepsItem-description cxd-StepsItem-ellText"
                   >
-                    <span />
+                    <span
+                      class=""
+                    />
                   </div>
                 </div>
               </div>
@@ -2387,7 +2448,7 @@ exports[`Renderer:Wizard send data 1`] = `
             type="submit"
           />
           <span
-            class="cxd-TplField"
+            class="cxd-TplField fr-view"
           >
             <span>
               这是最后一步了
@@ -2476,7 +2537,9 @@ exports[`Renderer:Wizard step initApi 1`] = `
                   <div
                     class="cxd-StepsItem-description cxd-StepsItem-ellText"
                   >
-                    <span />
+                    <span
+                      class=""
+                    />
                   </div>
                 </div>
               </div>
@@ -2519,7 +2582,9 @@ exports[`Renderer:Wizard step initApi 1`] = `
                   <div
                     class="cxd-StepsItem-description cxd-StepsItem-ellText"
                   >
-                    <span />
+                    <span
+                      class=""
+                    />
                   </div>
                 </div>
               </div>
@@ -2562,7 +2627,9 @@ exports[`Renderer:Wizard step initApi 1`] = `
                   <div
                     class="cxd-StepsItem-description cxd-StepsItem-ellText"
                   >
-                    <span />
+                    <span
+                      class=""
+                    />
                   </div>
                 </div>
               </div>
@@ -2584,6 +2651,7 @@ exports[`Renderer:Wizard step initApi 1`] = `
           />
           <div
             class="cxd-Form-item cxd-Form-item--normal is-required"
+            data-amis-name="email"
             data-role="form-item"
           >
             <label
@@ -2591,7 +2659,7 @@ exports[`Renderer:Wizard step initApi 1`] = `
             >
               <span>
                 <span
-                  class="cxd-TplField"
+                  class="cxd-TplField fr-view"
                 >
                   <span>
                     邮箱
@@ -2745,7 +2813,9 @@ exports[`Renderer:Wizard target 1`] = `
                           <div
                             class="cxd-StepsItem-description cxd-StepsItem-ellText"
                           >
-                            <span />
+                            <span
+                              class=""
+                            />
                           </div>
                         </div>
                       </div>
@@ -2788,7 +2858,9 @@ exports[`Renderer:Wizard target 1`] = `
                           <div
                             class="cxd-StepsItem-description cxd-StepsItem-ellText"
                           >
-                            <span />
+                            <span
+                              class=""
+                            />
                           </div>
                         </div>
                       </div>
@@ -2809,7 +2881,7 @@ exports[`Renderer:Wizard target 1`] = `
                     type="submit"
                   />
                   <span
-                    class="cxd-TplField"
+                    class="cxd-TplField fr-view"
                   >
                     <span>
                       这是最后一步了
@@ -2842,6 +2914,7 @@ exports[`Renderer:Wizard target 1`] = `
           </div>
           <div
             class="cxd-Panel cxd-Panel--default cxd-Panel--form"
+            data-role="container"
           >
             <div
               class="cxd-Panel-heading"
@@ -2850,7 +2923,7 @@ exports[`Renderer:Wizard target 1`] = `
                 class="cxd-Panel-title"
               >
                 <span
-                  class="cxd-TplField"
+                  class="cxd-TplField fr-view"
                 >
                   <span>
                     表单
@@ -2871,6 +2944,7 @@ exports[`Renderer:Wizard target 1`] = `
                 />
                 <div
                   class="cxd-Form-item cxd-Form-item--normal"
+                  data-amis-name="website"
                   data-role="form-item"
                 >
                   <label
@@ -2878,7 +2952,7 @@ exports[`Renderer:Wizard target 1`] = `
                   >
                     <span>
                       <span
-                        class="cxd-TplField"
+                        class="cxd-TplField fr-view"
                       >
                         <span>
                           Website
@@ -2906,6 +2980,7 @@ exports[`Renderer:Wizard target 1`] = `
                 </div>
                 <div
                   class="cxd-Form-item cxd-Form-item--normal"
+                  data-amis-name="name"
                   data-role="form-item"
                 >
                   <label
@@ -2913,7 +2988,7 @@ exports[`Renderer:Wizard target 1`] = `
                   >
                     <span>
                       <span
-                        class="cxd-TplField"
+                        class="cxd-TplField fr-view"
                       >
                         <span>
                           Name
@@ -3017,7 +3092,9 @@ exports[`Renderer:Wizard validate 1`] = `
                   <div
                     class="cxd-StepsItem-description cxd-StepsItem-ellText"
                   >
-                    <span />
+                    <span
+                      class=""
+                    />
                   </div>
                 </div>
               </div>
@@ -3060,7 +3137,9 @@ exports[`Renderer:Wizard validate 1`] = `
                   <div
                     class="cxd-StepsItem-description cxd-StepsItem-ellText"
                   >
-                    <span />
+                    <span
+                      class=""
+                    />
                   </div>
                 </div>
               </div>
@@ -3103,7 +3182,9 @@ exports[`Renderer:Wizard validate 1`] = `
                   <div
                     class="cxd-StepsItem-description cxd-StepsItem-ellText"
                   >
-                    <span />
+                    <span
+                      class=""
+                    />
                   </div>
                 </div>
               </div>
@@ -3125,6 +3206,7 @@ exports[`Renderer:Wizard validate 1`] = `
           />
           <div
             class="cxd-Form-item cxd-Form-item--normal is-error is-required has-error--isUrl"
+            data-amis-name="website"
             data-role="form-item"
           >
             <label
@@ -3132,7 +3214,7 @@ exports[`Renderer:Wizard validate 1`] = `
             >
               <span>
                 <span
-                  class="cxd-TplField"
+                  class="cxd-TplField fr-view"
                 >
                   <span>
                     网址
@@ -3146,7 +3228,7 @@ exports[`Renderer:Wizard validate 1`] = `
               </span>
             </label>
             <div
-              class="cxd-Form-control is-error has-error--isUrl cxd-TextControl"
+              class="cxd-Form-control is-error has-error--isUrl cxd-TextControl is-focused"
             >
               <div
                 class="cxd-TextControl-input"
@@ -3172,6 +3254,7 @@ exports[`Renderer:Wizard validate 1`] = `
           </div>
           <div
             class="cxd-Form-item cxd-Form-item--normal is-error is-required has-error--isRequired"
+            data-amis-name="name"
             data-role="form-item"
           >
             <label
@@ -3179,7 +3262,7 @@ exports[`Renderer:Wizard validate 1`] = `
             >
               <span>
                 <span
-                  class="cxd-TplField"
+                  class="cxd-TplField fr-view"
                 >
                   <span>
                     名称

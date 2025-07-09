@@ -167,9 +167,7 @@ export default class Container<T> extends React.Component<
       ? typeof children === 'function'
         ? ((children as any)(this.props) as JSX.Element)
         : (children as any)
-      : body
-      ? (render('body', body as any, {disabled}) as JSX.Element)
-      : null;
+      : (render('body', (body as any) ? body : [], {disabled}) as JSX.Element);
 
     if (isWrapperBody) {
       return (
@@ -236,6 +234,7 @@ export default class Container<T> extends React.Component<
         onMouseLeave={this.handleMouseLeave}
         style={buildStyle(style, data)}
         data-id={id}
+        data-role="container"
       >
         {this.renderBody()}
         <CustomStyle

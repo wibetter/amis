@@ -51,6 +51,7 @@ import {SchemaRemark} from './Remark';
 import type {IItem, IScopedContext} from 'amis-core';
 import type {OnEventProps} from 'amis-core';
 import find from 'lodash/find';
+import {AlphabetIndexer} from 'amis-ui';
 
 /**
  * 不指定类型默认就是文本
@@ -241,6 +242,21 @@ export interface ListSchema extends BaseSchema {
    * 点击列表项的行为
    */
   itemAction?: ActionSchema;
+
+  /**
+   * 是否显示右侧字母索引条
+   */
+  showIndexBar?: boolean;
+
+  /**
+   * 索引依据字段
+   */
+  indexField?: string;
+
+  /**
+   * 索引条偏移量
+   */
+  indexBarOffset?: number;
 }
 
 export interface Column {
@@ -254,12 +270,23 @@ export interface ListProps
     SpinnerExtraProps {
   store: IListStore;
   selectable?: boolean;
+
+  // 已选清单
   selected?: Array<any>;
   draggable?: boolean;
+
+  // 行数据集合
+  items?: Array<object>;
+
+  // 原始数据集合，前端分页时用来保存原始数据
+  fullItems?: Array<object>;
+
   onSelect: (
     selectedItems: Array<object>,
     unSelectedItems: Array<object>
   ) => void;
+  // 单条修改时触发
+  onItemChange?: (item: object, diff: object, rowIndex: string) => void;
   onSave?: (
     items: Array<object> | object,
     diff: Array<object> | object,
@@ -275,7 +302,11 @@ export interface ListProps
   onQuery: (values: object) => any;
 }
 
-export default class List extends React.Component<ListProps, object> {
+export interface ListState {
+  currentLetter?: string;
+}
+
+export default class List extends React.Component<ListProps, ListState> {
   static propsList: Array<keyof ListProps> = [
     'header',
     'headerToolbarRender',
@@ -309,9 +340,21 @@ export default class List extends React.Component<ListProps, object> {
   parentNode?: any;
   body?: any;
   renderedToolbars: Array<string>;
+  private observer: IntersectionObserver | null = null;
+  itemRefs: Array<{
+    element: HTMLElement;
+    letter: string;
+    isIntersecting?: boolean;
+  }> = [];
+  userClick: boolean = false;
+  userClickTimer: any;
 
   constructor(props: ListProps) {
     super(props);
+
+    this.state = {
+      currentLetter: undefined
+    };
 
     this.handleAction = this.handleAction.bind(this);
     this.handleCheck = this.handleCheck.bind(this);
@@ -324,6 +367,8 @@ export default class List extends React.Component<ListProps, object> {
     this.getPopOverContainer = this.getPopOverContainer.bind(this);
     this.bodyRef = this.bodyRef.bind(this);
     this.renderToolbar = this.renderToolbar.bind(this);
+    this.handleLetterClick = this.handleLetterClick.bind(this);
+    this.setItemRef = this.setItemRef.bind(this);
 
     const {
       store,
@@ -360,13 +405,14 @@ export default class List extends React.Component<ListProps, object> {
     let items: Array<object> = [];
     let updateItems = false;
 
-    if (
-      Array.isArray(value) &&
-      (!prevProps ||
-        getPropValue(prevProps, (props: ListProps) => props.items) !== value)
-    ) {
-      items = value;
-      updateItems = true;
+    if (Array.isArray(value)) {
+      if (
+        !prevProps ||
+        getPropValue(prevProps, (props: ListProps) => props.items) !== value
+      ) {
+        items = value;
+        updateItems = true;
+      }
     } else if (typeof source === 'string') {
       const resolved = resolveVariableAndFilter(source, props.data, '| raw');
       const prev = prevProps
@@ -381,15 +427,30 @@ export default class List extends React.Component<ListProps, object> {
       }
     }
 
-    updateItems && store.initItems(items);
+    updateItems && store.initItems(items, props.fullItems, props.selected);
     Array.isArray(props.selected) &&
       store.updateSelected(props.selected, props.valueField);
     return updateItems;
   }
 
+  componentDidMount() {
+    if (this.props.showIndexBar) {
+      this.observeItems();
+    }
+  }
+
   componentDidUpdate(prevProps: ListProps) {
     const props = this.props;
     const store = props.store;
+
+    if (this.props.showIndexBar) {
+      if (!prevProps.showIndexBar || prevProps.items !== props.items) {
+        this.observer?.disconnect();
+        this.observeItems();
+      }
+    } else if (prevProps.showIndexBar) {
+      this.observer?.disconnect();
+    }
 
     if (
       anyChanged(
@@ -434,6 +495,23 @@ export default class List extends React.Component<ListProps, object> {
     }
   }
 
+  componentWillUnmount() {
+    this.observer?.disconnect();
+  }
+
+  private getIndexDataField(listItem: any, indexField?: string): string {
+    // 确定用于索引的配置字段名，默认为 'title'
+    const configFieldName = indexField || 'title';
+
+    // 从配置中提取实际数据字段名（假设格式为 ${fieldName}）
+    const dataFieldNameTemplate = listItem?.[configFieldName];
+    // 从 "${fieldName}" 格式中提取出 "fieldName"
+    return dataFieldNameTemplate?.substring(
+      2,
+      dataFieldNameTemplate?.length - 1
+    );
+  }
+
   bodyRef(ref: HTMLDivElement) {
     this.body = ref;
   }
@@ -462,13 +540,23 @@ export default class List extends React.Component<ListProps, object> {
       );
     } else {
       /** action无值代表List自身已经处理, 无需交给上层处理 */
-      action && onAction?.(e, action, ctx);
+      return action && onAction?.(e, action, ctx);
     }
   }
 
   handleCheck(item: IItem) {
     item.toggle();
     this.syncSelected();
+
+    const {dispatchEvent, store} = this.props;
+    dispatchEvent(
+      //增删改查卡片模式选择表格项
+      'selectedChange',
+      createObject(store.data, {
+        ...store.eventContext,
+        item: item.data
+      })
+    );
   }
 
   handleCheckAll() {
@@ -476,6 +564,15 @@ export default class List extends React.Component<ListProps, object> {
 
     store.toggleAll();
     this.syncSelected();
+
+    const {dispatchEvent} = this.props;
+    dispatchEvent(
+      //增删改查卡片模式选择表格项
+      'selectedChange',
+      createObject(store.data, {
+        ...store.eventContext
+      })
+    );
   }
 
   syncSelected() {
@@ -788,9 +885,7 @@ export default class List extends React.Component<ListProps, object> {
       ? headerToolbarRender(
           {
             ...this.props,
-            selectedItems: store.selectedItems.map(item => item.data),
-            items: store.items.map(item => item.data),
-            unSelectedItems: store.unSelectedItems.map(item => item.data)
+            ...store.eventContext
           },
           this.renderToolbar
         )
@@ -843,9 +938,7 @@ export default class List extends React.Component<ListProps, object> {
       ? footerToolbarRender(
           {
             ...this.props,
-            selectedItems: store.selectedItems.map(item => item.data),
-            items: store.items.map(item => item.data),
-            unSelectedItems: store.unSelectedItems.map(item => item.data)
+            ...store.eventContext
           },
           this.renderToolbar
         )
@@ -958,7 +1051,7 @@ export default class List extends React.Component<ListProps, object> {
     template: ListItemSchema | undefined,
     item: IItem,
     itemClassName: string
-  ) {
+  ): React.ReactNode {
     const {
       render,
       multiple,
@@ -970,7 +1063,8 @@ export default class List extends React.Component<ListProps, object> {
       itemAction,
       classnames: cx,
       translate: __,
-      testIdBuilder
+      testIdBuilder,
+      indexBarOffset
     } = this.props;
     const hasClickActions =
       onEvent &&
@@ -1006,9 +1100,41 @@ export default class List extends React.Component<ListProps, object> {
         dragging: store.dragging,
         data: item.locals,
         onQuickChange: store.dragging ? null : this.handleQuickChange,
-        popOverContainer: this.getPopOverContainer
+        popOverContainer: this.getPopOverContainer,
+        indexBarOffset,
+        itemRef: this.setItemRef
       }
     );
+  }
+
+  handleLetterClick(letter: string): void {
+    const {indexField = 'title', store, listItem} = this.props;
+    if (!store) return;
+
+    const dataFieldName = this.getIndexDataField(listItem, indexField);
+
+    this.setState({currentLetter: letter});
+
+    const targetItem = store.items.find(item => {
+      const value = getPropValue(
+        {data: item.data},
+        () => item.data[dataFieldName]
+      );
+      return typeof value === 'string'
+        ? value.charAt(0).toUpperCase() === letter
+        : false;
+    });
+
+    if (targetItem) {
+      const itemElement = this.itemRefs[targetItem.index];
+      if (itemElement) {
+        this.userClick = true;
+        itemElement.element.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    }
   }
 
   render() {
@@ -1019,20 +1145,18 @@ export default class List extends React.Component<ListProps, object> {
       store,
       placeholder,
       render,
-      multiple,
       listItem,
-      onAction,
-      hideCheckToggler,
-      checkOnItemClick,
-      itemAction,
       affixHeader,
-      env,
       classnames: cx,
       size,
       translate: __,
       loading = false,
-      loadingConfig
+      loadingConfig,
+      showIndexBar,
+      indexField = 'title'
     } = this.props;
+
+    const currentLetter = this.state.currentLetter;
 
     this.renderedToolbars = [];
     const heading = this.renderHeading();
@@ -1047,34 +1171,113 @@ export default class List extends React.Component<ListProps, object> {
         style={style}
         ref={this.bodyRef}
       >
-        {affixHeader ? (
-          <div className={cx('List-fixedTop')}>
-            {header}
-            {heading}
-          </div>
-        ) : (
-          <>
-            {header}
-            {heading}
-          </>
-        )}
-
-        {store.items.length ? (
-          <div className={cx('List-items')}>
-            {store.items.map((item, index) =>
-              this.renderListItem(index, listItem, item, itemClassName)
+        <div className={cx('List-content-wrapper')}>
+          <div className={cx('List-main')}>
+            {affixHeader ? (
+              <div className={cx('List-fixedTop')}>
+                {header}
+                {heading}
+              </div>
+            ) : (
+              <>
+                {header}
+                {heading}
+              </>
             )}
-          </div>
-        ) : (
-          <div className={cx('List-placeholder')}>
-            {render('placeholder', __(placeholder))}
-          </div>
-        )}
 
-        {this.renderFooter()}
+            {store.items.length ? (
+              <div className={cx('List-items')}>
+                {store.items.map((item, index) =>
+                  this.renderListItem(index, listItem, item, itemClassName)
+                )}
+              </div>
+            ) : (
+              <div className={cx('List-placeholder')}>
+                {render('placeholder', __(placeholder))}
+              </div>
+            )}
+
+            {this.renderFooter()}
+          </div>
+
+          {showIndexBar && store.items.length > 0 && (
+            <AlphabetIndexer
+              items={store.items}
+              getItemLetter={item => {
+                const dataFieldName = this.getIndexDataField(
+                  listItem,
+                  indexField
+                );
+                const value = getPropValue(
+                  {data: item.data},
+                  () => item.data[dataFieldName]
+                );
+
+                return typeof value === 'string' && /^[A-Za-z]/.test(value)
+                  ? value
+                  : '';
+              }}
+              onLetterClick={this.handleLetterClick}
+              classnames={cx}
+              currentLetter={currentLetter}
+            />
+          )}
+        </div>
         <Spinner overlay show={loading} loadingConfig={loadingConfig} />
       </div>
     );
+  }
+
+  private observeItems() {
+    this.observer = new IntersectionObserver(this.scrollObserver);
+    this.itemRefs.forEach(item => {
+      this.observer!.observe(item.element);
+    });
+  }
+
+  @autobind
+  scrollObserver(entries: IntersectionObserverEntry[]) {
+    entries.forEach(entry => {
+      const index = entry.target.getAttribute('data-index')!;
+      const currentSection = this.itemRefs[parseInt(index, 10)];
+      if (currentSection) {
+        currentSection.isIntersecting = entry.isIntersecting;
+      }
+    });
+    // 找到第一个可见的区域
+    const firstVisibleIndex = this.itemRefs.findIndex(
+      item => item.isIntersecting
+    );
+
+    if (!this.userClick) {
+      if (typeof firstVisibleIndex === 'number') {
+        const item = this.itemRefs[firstVisibleIndex];
+        this.setState({currentLetter: item.letter});
+      }
+    } else {
+      // 滚动结束后，重置userClick状态
+      if (this.userClickTimer) {
+        clearTimeout(this.userClickTimer);
+      }
+      this.userClickTimer = setTimeout(() => {
+        this.userClick = false;
+      }, 300);
+    }
+  }
+
+  setItemRef(index: number, item: IItem, ref: HTMLElement | null) {
+    if (ref) {
+      const {indexField, listItem} = this.props;
+      const dataFieldName = this.getIndexDataField(listItem, indexField);
+      const value = getPropValue(
+        {data: item.data},
+        () => item.data[dataFieldName]
+      );
+      this.itemRefs[index] = {
+        element: ref,
+        letter: value?.charAt(0).toUpperCase()
+      };
+    }
   }
 }
 
@@ -1178,6 +1381,9 @@ export class ListRenderer extends List {
       targets.forEach(target => {
         target.updateData(values);
       });
+    } else if (this.props?.host) {
+      // 如果在 CRUD 里面，优先让 CRUD 去更新状态
+      return this.props.host.setData?.(values, replace, index, condition);
     } else {
       return store.updateData(values, undefined, replace);
     }
@@ -1186,6 +1392,10 @@ export class ListRenderer extends List {
   getData() {
     const {store, data} = this.props;
     return store.getData(data);
+  }
+
+  hasModifiedItems() {
+    return this.props.store.modified;
   }
 
   async doAction(
@@ -1201,9 +1411,11 @@ export class ListRenderer extends List {
       case 'selectAll':
         store.clear();
         store.toggleAll();
+        this.syncSelected();
         break;
       case 'clearAll':
         store.clear();
+        this.syncSelected();
         break;
       case 'select':
         const rows = await getMatchedEventTargets<IItem>(
@@ -1217,6 +1429,7 @@ export class ListRenderer extends List {
           rows.map(item => item.data),
           valueField
         );
+        this.syncSelected();
         break;
       case 'initDrag':
         store.startDragging();
@@ -1244,6 +1457,7 @@ export interface ListItemProps
   itemAction?: ActionSchema;
   onEvent?: OnEventProps['onEvent'];
   hasClickActions?: boolean;
+  itemRef?: (index: number, item: IItem, ref: HTMLElement | null) => void;
 }
 export class ListItem extends React.Component<ListItemProps> {
   static defaultProps: Partial<ListItemProps> = {
@@ -1509,15 +1723,19 @@ export class ListItem extends React.Component<ListItemProps> {
       actionsPosition,
       itemAction,
       onEvent,
-      hasClickActions
+      hasClickActions,
+      itemIndex,
+      indexBarOffset,
+      itemRef,
+      item
     } = this.props;
     const avatar = filter(avatarTpl, data);
     const title = filter(titleTpl, data);
     const subTitle = filter(subTitleTpl, data);
     const desc = filter(descTpl, data);
-
     return (
       <div
+        data-index={itemIndex}
         onClick={this.handleClick}
         className={cx(
           `ListItem ListItem--actions-at-${actionsPosition || 'right'}`,
@@ -1526,6 +1744,15 @@ export class ListItem extends React.Component<ListItemProps> {
           },
           className
         )}
+        style={{
+          scrollMarginTop:
+            indexBarOffset !== undefined
+              ? `${indexBarOffset}px`
+              : 'var(--affix-offset-top)'
+        }}
+        ref={ref =>
+          itemRef && itemIndex !== undefined && itemRef(itemIndex, item, ref)
+        }
       >
         {this.renderLeft()}
         {this.renderRight()}
@@ -1552,8 +1779,7 @@ export class ListItem extends React.Component<ListItemProps> {
 }
 
 @Renderer({
-  test: /(^|\/)(?:list|list-group)\/(?:.*\/)?list-item$/,
-  name: 'list-item'
+  type: 'list-item'
 })
 export class ListItemRenderer extends ListItem {
   static propsList = ['multiple', ...ListItem.propsList];

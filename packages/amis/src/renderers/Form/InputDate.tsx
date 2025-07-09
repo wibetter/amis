@@ -81,6 +81,10 @@ export interface InputDateBaseControlSchema extends FormBaseControlSchema {
    * (currentDate: moment.Moment, props: any) => boolean;
    */
   disabledDate?: string;
+
+  /* * 是否禁止输入
+   */
+  inputForbid?: boolean;
 }
 
 /**
@@ -550,9 +554,13 @@ export default class DateControl extends React.PureComponent<
     this.dateRef = ref;
   }
 
+  focus() {
+    this.dateRef?.focus?.();
+  }
+
   // 派发有event的事件
   @autobind
-  dispatchEvent(e: React.SyntheticEvent<HTMLElement>) {
+  dispatchEvent(e: string | React.MouseEvent<any>) {
     const {dispatchEvent, value} = this.props;
     dispatchEvent(e, resolveEventData(this.props, {value}));
   }

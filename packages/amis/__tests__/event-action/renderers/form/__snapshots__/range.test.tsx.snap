@@ -17,6 +17,7 @@ exports[`EventAction:inputRange 1`] = `
         >
           <div
             class="cxd-Form-item cxd-Form-item--normal"
+            data-amis-name="range"
             data-role="form-item"
           >
             <div
@@ -116,6 +117,7 @@ exports[`EventAction:inputRange 1`] = `
           </div>
           <div
             class="cxd-Panel cxd-Panel--default cxd-Panel--form"
+            data-role="container"
           >
             <div
               class="cxd-Panel-heading"
@@ -124,7 +126,7 @@ exports[`EventAction:inputRange 1`] = `
                 class="cxd-Panel-title"
               >
                 <span
-                  class="cxd-TplField"
+                  class="cxd-TplField fr-view"
                 >
                   <span>
                     表单
@@ -327,6 +329,7 @@ exports[`EventAction:inputRange 1`] = `
                 </div>
                 <div
                   class="cxd-Form-item cxd-Form-item--normal input-text-range-value"
+                  data-amis-name="rangeValue"
                   data-role="form-item"
                 >
                   <label
@@ -334,7 +337,7 @@ exports[`EventAction:inputRange 1`] = `
                   >
                     <span>
                       <span
-                        class="cxd-TplField"
+                        class="cxd-TplField fr-view"
                       >
                         <span>
                           滑块值
@@ -363,6 +366,7 @@ exports[`EventAction:inputRange 1`] = `
                 </div>
                 <div
                   class="cxd-Form-item cxd-Form-item--normal input-text-range-event"
+                  data-amis-name="rangeEvent"
                   data-role="form-item"
                 >
                   <label
@@ -370,7 +374,7 @@ exports[`EventAction:inputRange 1`] = `
                   >
                     <span>
                       <span
-                        class="cxd-TplField"
+                        class="cxd-TplField fr-view"
                       >
                         <span>
                           滑块事件
